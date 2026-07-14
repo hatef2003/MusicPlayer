@@ -1,0 +1,13 @@
+<resources>
+    <!-- Hacker terminal dark palette -->
+    <color name="md_primary">#0A0A0A</color>
+    <color name="md_primary_dark">#000000</color>
+    <color name="md_primary_light">#00FF41</color>
+    <color name="md_accent">#00FF41</color>
+    <color name="md_bg">#000000</color>
+    <color name="md_surface">#0A0A0A</color>
+    <color name="md_bg_dark">#000000</color>
+    <color name="text_primary">#00FF41</color>
+    <color name="text_secondary">#00B32C</color>
+    <color name="divider">#003300</color>
+</resources>

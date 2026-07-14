@@ -1,0 +1,27 @@
+<resources>
+    <color name="purple_200">#FFBB86FC</color>
+    <color name="purple_500">#FF6200EE</color>
+    <color name="purple_700">#FF3700B3</color>
+    <color name="teal_200">#FF03DAC5</color>
+    <color name="teal_700">#FF018786</color>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+
+    <!-- Hacker terminal palette -->
+    <color name="md_primary">#0A0A0A</color>
+    <color name="md_primary_dark">#000000</color>
+    <color name="md_primary_light">#00FF41</color>
+    <color name="md_accent">#00FF41</color>
+    <color name="md_bg">#000000</color>
+    <color name="md_surface">#0A0A0A</color>
+    <color name="md_bg_dark">#000000</color>
+    <color name="text_primary">#00FF41</color>
+    <color name="text_secondary">#00B32C</color>
+    <color name="divider">#003300</color>
+
+    <!-- Accent color presets -->
+    <color name="accent_green">#00FF41</color>
+    <color name="accent_blue">#00A8FF</color>
+    <color name="accent_orange">#FF9D00</color>
+    <color name="accent_purple">#B829DD</color>
+</resources>

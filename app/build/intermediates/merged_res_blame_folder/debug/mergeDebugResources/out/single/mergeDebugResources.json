@@ -1,0 +1,82 @@
+[
+    {
+        "merged": "C:\\Users\\Hot-f\\.gradle\\daemon\\8.9\\com.example.musicplayer.app-debug-35:\\drawable_ic_launcher_foreground.xml.flat",
+        "source": "C:\\Users\\Hot-f\\.gradle\\daemon\\8.9\\com.example.musicplayer.app-main-37:\\drawable\\ic_launcher_foreground.xml"
+    },
+    {
+        "merged": "C:\\Users\\Hot-f\\.gradle\\daemon\\8.9\\com.example.musicplayer.app-debug-35:\\drawable_ic_pause.xml.flat",
+        "source": "C:\\Users\\Hot-f\\.gradle\\daemon\\8.9\\com.example.musicplayer.app-main-37:\\drawable\\ic_pause.xml"
+    },
+    {
+        "merged": "C:\\Users\\Hot-f\\.gradle\\daemon\\8.9\\com.example.musicplayer.app-debug-35:\\drawable_ic_next.xml.flat",
+        "source": "C:\\Users\\Hot-f\\.gradle\\daemon\\8.9\\com.example.musicplayer.app-main-37:\\drawable\\ic_next.xml"
+    },
+    {
+        "merged": "C:\\Users\\Hot-f\\.gradle\\daemon\\8.9\\com.example.musicplayer.app-debug-35:\\drawable_bg_terminal_item.xml.flat",
+        "source": "C:\\Users\\Hot-f\\.gradle\\daemon\\8.9\\com.example.musicplayer.app-main-37:\\drawable\\bg_terminal_item.xml"
+    },
+    {
+        "merged": "C:\\Users\\Hot-f\\.gradle\\daemon\\8.9\\com.example.musicplayer.app-debug-35:\\drawable_ic_play.xml.flat",
+        "source": "C:\\Users\\Hot-f\\.gradle\\daemon\\8.9\\com.example.musicplayer.app-main-37:\\drawable\\ic_play.xml"
+    },
+    {
+        "merged": "com.example.musicplayer.app-debug-35:/layout_item_album_card.xml.flat",
+        "source": "com.example.musicplayer.app-main-37:/layout/item_album_card.xml"
+    },
+    {
+        "merged": "C:\\Users\\Hot-f\\.gradle\\daemon\\8.9\\com.example.musicplayer.app-debug-35:\\drawable_ic_previous.xml.flat",
+        "source": "C:\\Users\\Hot-f\\.gradle\\daemon\\8.9\\com.example.musicplayer.app-main-37:\\drawable\\ic_previous.xml"
+    },
+    {
+        "merged": "C:\\Users\\Hot-f\\.gradle\\daemon\\8.9\\com.example.musicplayer.app-debug-35:\\mipmap-anydpi-v26_ic_launcher_round.xml.flat",
+        "source": "C:\\Users\\Hot-f\\.gradle\\daemon\\8.9\\com.example.musicplayer.app-main-37:\\mipmap-anydpi-v26\\ic_launcher_round.xml"
+    },
+    {
+        "merged": "C:\\Users\\Hot-f\\.gradle\\daemon\\8.9\\com.example.musicplayer.app-debug-35:\\drawable_ic_settings.xml.flat",
+        "source": "C:\\Users\\Hot-f\\.gradle\\daemon\\8.9\\com.example.musicplayer.app-main-37:\\drawable\\ic_settings.xml"
+    },
+    {
+        "merged": "C:\\Users\\Hot-f\\.gradle\\daemon\\8.9\\com.example.musicplayer.app-debug-35:\\layout_activity_now_playing.xml.flat",
+        "source": "C:\\Users\\Hot-f\\.gradle\\daemon\\8.9\\com.example.musicplayer.app-main-37:\\layout\\activity_now_playing.xml"
+    },
+    {
+        "merged": "C:\\Users\\Hot-f\\.gradle\\daemon\\8.9\\com.example.musicplayer.app-debug-35:\\layout_activity_main.xml.flat",
+        "source": "C:\\Users\\Hot-f\\.gradle\\daemon\\8.9\\com.example.musicplayer.app-main-37:\\layout\\activity_main.xml"
+    },
+    {
+        "merged": "C:\\Users\\Hot-f\\.gradle\\daemon\\8.9\\com.example.musicplayer.app-debug-35:\\layout_activity_settings.xml.flat",
+        "source": "C:\\Users\\Hot-f\\.gradle\\daemon\\8.9\\com.example.musicplayer.app-main-37:\\layout\\activity_settings.xml"
+    },
+    {
+        "merged": "C:\\Users\\Hot-f\\.gradle\\daemon\\8.9\\com.example.musicplayer.app-debug-35:\\mipmap-anydpi-v26_ic_launcher.xml.flat",
+        "source": "C:\\Users\\Hot-f\\.gradle\\daemon\\8.9\\com.example.musicplayer.app-main-37:\\mipmap-anydpi-v26\\ic_launcher.xml"
+    },
+    {
+        "merged": "C:\\Users\\Hot-f\\.gradle\\daemon\\8.9\\com.example.musicplayer.app-debug-35:\\layout_item_song.xml.flat",
+        "source": "C:\\Users\\Hot-f\\.gradle\\daemon\\8.9\\com.example.musicplayer.app-main-37:\\layout\\item_song.xml"
+    },
+    {
+        "merged": "C:\\Users\\Hot-f\\.gradle\\daemon\\8.9\\com.example.musicplayer.app-debug-35:\\layout_fragment_list.xml.flat",
+        "source": "C:\\Users\\Hot-f\\.gradle\\daemon\\8.9\\com.example.musicplayer.app-main-37:\\layout\\fragment_list.xml"
+    },
+    {
+        "merged": "C:\\Users\\Hot-f\\.gradle\\daemon\\8.9\\com.example.musicplayer.app-debug-35:\\mipmap_ic_launcher.xml.flat",
+        "source": "C:\\Users\\Hot-f\\.gradle\\daemon\\8.9\\com.example.musicplayer.app-main-37:\\mipmap\\ic_launcher.xml"
+    },
+    {
+        "merged": "C:\\Users\\Hot-f\\.gradle\\daemon\\8.9\\com.example.musicplayer.app-debug-35:\\mipmap_ic_launcher_round.xml.flat",
+        "source": "C:\\Users\\Hot-f\\.gradle\\daemon\\8.9\\com.example.musicplayer.app-main-37:\\mipmap\\ic_launcher_round.xml"
+    },
+    {
+        "merged": "C:\\Users\\Hot-f\\.gradle\\daemon\\8.9\\com.example.musicplayer.app-debug-35:\\layout_activity_album_detail.xml.flat",
+        "source": "C:\\Users\\Hot-f\\.gradle\\daemon\\8.9\\com.example.musicplayer.app-main-37:\\layout\\activity_album_detail.xml"
+    },
+    {
+        "merged": "C:\\Users\\Hot-f\\.gradle\\daemon\\8.9\\com.example.musicplayer.app-debug-35:\\layout_item_album.xml.flat",
+        "source": "C:\\Users\\Hot-f\\.gradle\\daemon\\8.9\\com.example.musicplayer.app-main-37:\\layout\\item_album.xml"
+    },
+    {
+        "merged": "C:\\Users\\Hot-f\\.gradle\\daemon\\8.9\\com.example.musicplayer.app-debug-35:\\drawable_ic_album.xml.flat",
+        "source": "C:\\Users\\Hot-f\\.gradle\\daemon\\8.9\\com.example.musicplayer.app-main-37:\\drawable\\ic_album.xml"
+    }
+]

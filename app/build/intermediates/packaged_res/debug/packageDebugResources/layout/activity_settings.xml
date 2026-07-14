@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/md_bg">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/settings_theme"
+            android:textColor="@color/text_primary"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:fontFamily="monospace"
+            android:layout_marginBottom="8dp" />
+
+        <RadioGroup
+            android:id="@+id/themeGroup"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <RadioButton
+                android:id="@+id/themeSystem"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/theme_system"
+                android:textColor="@color/text_primary"
+                android:fontFamily="monospace" />
+
+            <RadioButton
+                android:id="@+id/themeLight"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/theme_light"
+                android:textColor="@color/text_primary"
+                android:fontFamily="monospace" />
+
+            <RadioButton
+                android:id="@+id/themeDark"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/theme_dark"
+                android:textColor="@color/text_primary"
+                android:fontFamily="monospace" />
+        </RadioGroup>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/divider"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="16dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/settings_sort"
+            android:textColor="@color/text_primary"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:fontFamily="monospace"
+            android:layout_marginBottom="8dp" />
+
+        <RadioGroup
+            android:id="@+id/sortGroup"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <RadioButton
+                android:id="@+id/sortTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/sort_title"
+                android:textColor="@color/text_primary"
+                android:fontFamily="monospace" />
+
+            <RadioButton
+                android:id="@+id/sortArtist"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/sort_artist"
+                android:textColor="@color/text_primary"
+                android:fontFamily="monospace" />
+
+            <RadioButton
+                android:id="@+id/sortAlbum"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/sort_album"
+                android:textColor="@color/text_primary"
+                android:fontFamily="monospace" />
+
+            <RadioButton
+                android:id="@+id/sortDuration"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/sort_duration"
+                android:textColor="@color/text_primary"
+                android:fontFamily="monospace" />
+
+            <RadioButton
+                android:id="@+id/sortDateAdded"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/sort_date_added"
+                android:textColor="@color/text_primary"
+                android:fontFamily="monospace" />
+        </RadioGroup>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/divider"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="16dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/settings_accent_color"
+            android:textColor="@color/text_primary"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:fontFamily="monospace"
+            android:layout_marginBottom="8dp" />
+
+        <RadioGroup
+            android:id="@+id/accentColorGroup"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <RadioButton
+                android:id="@+id/accentGreen"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/accent_green"
+                android:textColor="@color/text_primary"
+                android:fontFamily="monospace" />
+
+            <RadioButton
+                android:id="@+id/accentBlue"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/accent_blue"
+                android:textColor="@color/text_primary"
+                android:fontFamily="monospace" />
+
+            <RadioButton
+                android:id="@+id/accentOrange"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/accent_orange"
+                android:textColor="@color/text_primary"
+                android:fontFamily="monospace" />
+
+            <RadioButton
+                android:id="@+id/accentPurple"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/accent_purple"
+                android:textColor="@color/text_primary"
+                android:fontFamily="monospace" />
+        </RadioGroup>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/divider"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="16dp" />
+
+        <TextView
+            android:id="@+id/versionText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@color/text_secondary"
+            android:textSize="12sp"
+            android:fontFamily="monospace" />
+
+    </LinearLayout>
+</ScrollView>

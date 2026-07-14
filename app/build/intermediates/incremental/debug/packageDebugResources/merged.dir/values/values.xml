@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:ns1="http://schemas.android.com/tools">
+    <color name="accent_blue">#00A8FF</color>
+    <color name="accent_green">#00FF41</color>
+    <color name="accent_orange">#FF9D00</color>
+    <color name="accent_purple">#B829DD</color>
+    <color name="black">#FF000000</color>
+    <color name="divider">#003300</color>
+    <color name="md_accent">#00FF41</color>
+    <color name="md_bg">#000000</color>
+    <color name="md_bg_dark">#000000</color>
+    <color name="md_primary">#0A0A0A</color>
+    <color name="md_primary_dark">#000000</color>
+    <color name="md_primary_light">#00FF41</color>
+    <color name="md_surface">#0A0A0A</color>
+    <color name="purple_200">#FFBB86FC</color>
+    <color name="purple_500">#FF6200EE</color>
+    <color name="purple_700">#FF3700B3</color>
+    <color name="teal_200">#FF03DAC5</color>
+    <color name="teal_700">#FF018786</color>
+    <color name="text_primary">#00FF41</color>
+    <color name="text_secondary">#00B32C</color>
+    <color name="white">#FFFFFFFF</color>
+    <item name="mediaRouteButton" type="id"/>
+    <string name="accent_blue">Blue</string>
+    <string name="accent_green">Green</string>
+    <string name="accent_orange">Orange</string>
+    <string name="accent_purple">Purple</string>
+    <string name="app_name">Music Player</string>
+    <string name="attribution_audio_playback">Audio Playback</string>
+    <string name="empty_albums">No albums found on your device</string>
+    <string name="empty_search">No matches found</string>
+    <string name="empty_tracks">No music found on your device</string>
+    <string name="no_songs_album">No songs in this album</string>
+    <string name="now_playing">Now Playing</string>
+    <string name="search_hint">Search tracks \u0026 albums</string>
+    <string name="settings_accent_color">Accent Color</string>
+    <string name="settings_sort">Default Track Sort</string>
+    <string name="settings_theme">Theme</string>
+    <string name="settings_title">Settings</string>
+    <string name="settings_version">Version %1$s</string>
+    <string name="sort_album">Album</string>
+    <string name="sort_artist">Artist</string>
+    <string name="sort_date_added">Date Added</string>
+    <string name="sort_dialog_title">Sort tracks by</string>
+    <string name="sort_duration">Duration</string>
+    <string name="sort_label">Sort: %1$s</string>
+    <string name="sort_title">Title</string>
+    <string name="tab_albums">Albums</string>
+    <string name="tab_tracks">Tracks</string>
+    <string name="theme_dark">Dark</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_system">System</string>
+    <style name="Theme.MusicPlayer" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
+        <item name="colorPrimary">@color/md_primary</item>
+        <item name="colorPrimaryVariant">@color/md_primary_dark</item>
+        <item name="colorOnPrimary">@color/text_primary</item>
+        <item name="colorSecondary">@color/md_accent</item>
+        <item name="colorSecondaryVariant">@color/md_accent</item>
+        <item name="colorOnSecondary">@color/black</item>
+        <item name="android:colorBackground">@color/md_bg</item>
+        <item name="android:statusBarColor" ns1:targetApi="l">@color/md_primary_dark</item>
+        <item name="android:windowLightStatusBar" ns1:targetApi="m">false</item>
+        <item name="colorControlActivated">@color/md_accent</item>
+        <item name="colorControlHighlight">@color/md_accent</item>
+    </style>
+    <style name="Theme.MusicPlayer.Blue" parent="Theme.MusicPlayer">
+        <item name="colorSecondary">@color/accent_blue</item>
+        <item name="colorSecondaryVariant">@color/accent_blue</item>
+        <item name="colorControlActivated">@color/accent_blue</item>
+        <item name="colorControlHighlight">@color/accent_blue</item>
+    </style>
+    <style name="Theme.MusicPlayer.Green" parent="Theme.MusicPlayer"/>
+    <style name="Theme.MusicPlayer.Orange" parent="Theme.MusicPlayer">
+        <item name="colorSecondary">@color/accent_orange</item>
+        <item name="colorSecondaryVariant">@color/accent_orange</item>
+        <item name="colorControlActivated">@color/accent_orange</item>
+        <item name="colorControlHighlight">@color/accent_orange</item>
+    </style>
+    <style name="Theme.MusicPlayer.Purple" parent="Theme.MusicPlayer">
+        <item name="colorSecondary">@color/accent_purple</item>
+        <item name="colorSecondaryVariant">@color/accent_purple</item>
+        <item name="colorControlActivated">@color/accent_purple</item>
+        <item name="colorControlHighlight">@color/accent_purple</item>
+    </style>
+</resources>

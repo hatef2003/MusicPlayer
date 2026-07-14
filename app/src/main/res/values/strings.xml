@@ -1,0 +1,35 @@
+<resources>
+    <string name="app_name">Music Player</string>
+    <string name="tab_tracks">Tracks</string>
+    <string name="tab_albums">Albums</string>
+    <string name="empty_tracks">No music found on your device</string>
+    <string name="empty_albums">No albums found on your device</string>
+    <string name="search_hint">Search tracks \u0026 albums</string>
+    <string name="empty_search">No matches found</string>
+    <string name="no_songs_album">No songs in this album</string>
+    <string name="now_playing">Now Playing</string>
+    <string name="attribution_audio_playback">Audio Playback</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_theme">Theme</string>
+    <string name="settings_sort">Default Track Sort</string>
+    <string name="settings_version">Version %1$s</string>
+    <string name="theme_system">System</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="settings_accent_color">Accent Color</string>
+    <string name="accent_green">Green</string>
+    <string name="accent_blue">Blue</string>
+    <string name="accent_orange">Orange</string>
+    <string name="accent_purple">Purple</string>
+
+    <!-- Sort -->
+    <string name="sort_title">Title</string>
+    <string name="sort_artist">Artist</string>
+    <string name="sort_album">Album</string>
+    <string name="sort_duration">Duration</string>
+    <string name="sort_date_added">Date Added</string>
+    <string name="sort_label">Sort: %1$s</string>
+    <string name="sort_dialog_title">Sort tracks by</string>
+</resources>
