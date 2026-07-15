@@ -3,26 +3,36 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:layout_marginStart="12dp"
+    android:layout_marginEnd="12dp"
+    android:layout_marginTop="4dp"
+    android:layout_marginBottom="4dp"
     android:orientation="horizontal"
-    android:padding="14dp">
+    android:background="@drawable/bg_song_card"
+    android:padding="14dp"
+    android:gravity="center_vertical">
 
+    <!-- Track number -->
     <TextView
         android:id="@+id/trackNumber"
-        android:layout_width="28dp"
+        android:layout_width="32dp"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="12dp"
         android:fontFamily="monospace"
         android:textColor="@color/text_secondary"
-        android:textSize="12sp"
+        android:textSize="14sp"
+        android:gravity="center"
         android:singleLine="true"
         tools:text="01" />
 
+    <!-- Green separator -->
     <View
-        android:layout_width="2dp"
-        android:layout_height="48dp"
+        android:layout_width="1dp"
+        android:layout_height="40dp"
+        android:layout_marginStart="8dp"
         android:layout_marginEnd="12dp"
-        android:background="?attr/colorSecondary" />
+        android:background="@color/terminal_dim" />
 
+    <!-- Song info -->
     <LinearLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
@@ -35,32 +45,50 @@
             android:layout_height="wrap_content"
             android:fontFamily="monospace"
             android:textColor="@color/text_primary"
-            android:textSize="15sp"
+            android:textSize="16sp"
             android:textStyle="bold"
             android:singleLine="true"
             android:ellipsize="end"
-            tools:text="Song Title" />
+            tools:text="From the Inside" />
 
         <TextView
             android:id="@+id/songArtist"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
             android:fontFamily="monospace"
             android:textColor="@color/text_secondary"
-            android:textSize="12sp"
+            android:textSize="13sp"
             android:singleLine="true"
             android:ellipsize="end"
-            tools:text="Artist Name" />
+            tools:text="Linkin Park" />
     </LinearLayout>
 
-    <TextView
-        android:id="@+id/songDuration"
+    <!-- Duration + menu -->
+    <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:fontFamily="monospace"
-        android:textColor="?attr/colorSecondary"
-        android:textSize="12sp"
-        android:layout_marginStart="12dp"
-        tools:text="3:45" />
+        android:orientation="vertical"
+        android:gravity="center_horizontal|end"
+        android:layout_marginStart="8dp">
+
+        <TextView
+            android:id="@+id/songDuration"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="monospace"
+            android:textColor="@color/terminal_green"
+            android:textSize="12sp"
+            tools:text="2:53" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="monospace"
+            android:textColor="@color/text_secondary"
+            android:textSize="14sp"
+            android:text="⋮"
+            android:padding="2dp" />
+    </LinearLayout>
 
 </LinearLayout>

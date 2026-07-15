@@ -156,6 +156,31 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
     public int getCurrentIndex() { return currentIndex; }
     public int getQueueSize() { return queue.size(); }
 
+    public List<Song> getQueue() {
+        return new ArrayList<>(queue);
+    }
+
+    public void moveQueueItem(int from, int to) {
+        if (from < 0 || from >= queue.size() || to < 0 || to >= queue.size()) return;
+        Song song = queue.remove(from);
+        queue.add(to, song);
+        // Update currentIndex to track the currently playing song
+        if (currentIndex == from) {
+            currentIndex = to;
+        } else if (from < currentIndex && to >= currentIndex) {
+            currentIndex--;
+        } else if (from > currentIndex && to <= currentIndex) {
+            currentIndex++;
+        }
+    }
+
+    public void playFromQueue(int index) {
+        if (index >= 0 && index < queue.size()) {
+            currentIndex = index;
+            playCurrent();
+        }
+    }
+
     private void notifyStateChanged(boolean playing) {
         if (listener != null) {
             Song s = getCurrentSong();

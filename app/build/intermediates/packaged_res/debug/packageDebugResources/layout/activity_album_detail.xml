@@ -6,22 +6,31 @@
     android:orientation="vertical"
     android:background="@color/md_bg">
 
+    <!-- ═══ HEADER ═══ -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:background="@color/md_primary"
-        android:padding="20dp">
+        android:padding="16dp"
+        android:gravity="center_vertical">
 
         <ImageView
             android:id="@+id/detailAlbumArt"
-            android:layout_width="80dp"
-            android:layout_height="80dp"
-            android:layout_marginEnd="16dp"
+            android:layout_width="72dp"
+            android:layout_height="72dp"
+            android:layout_marginEnd="14dp"
             android:scaleType="centerCrop"
             android:src="@drawable/ic_album"
-            android:background="@color/md_primary_light"
+            android:background="@color/md_surface"
             android:contentDescription="Album art" />
+
+        <!-- Green border next to art -->
+        <View
+            android:layout_width="2dp"
+            android:layout_height="72dp"
+            android:layout_marginEnd="14dp"
+            android:background="@color/terminal_green" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -33,8 +42,8 @@
                 android:id="@+id/detailAlbumName"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textColor="@color/text_primary"
-                android:textSize="24sp"
+                android:textColor="@color/terminal_green"
+                android:textSize="18sp"
                 android:textStyle="bold"
                 android:fontFamily="monospace"
                 android:singleLine="true"
@@ -45,15 +54,21 @@
                 android:id="@+id/detailAlbumArtist"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
+                android:layout_marginTop="2dp"
                 android:textColor="@color/text_secondary"
-                android:textSize="14sp"
+                android:textSize="13sp"
                 android:fontFamily="monospace"
                 android:singleLine="true"
                 android:ellipsize="end"
                 tools:text="Artist" />
         </LinearLayout>
     </LinearLayout>
+
+    <!-- Divider -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/terminal_dim" />
 
     <FrameLayout
         android:layout_width="match_parent"
@@ -69,9 +84,10 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:text="@string/no_songs_album"
-            android:textColor="@color/text_secondary"
-            android:textSize="16sp"
+            android:fontFamily="monospace"
+            android:text="// no songs in album"
+            android:textColor="@color/terminal_dim"
+            android:textSize="14sp"
             android:visibility="gone" />
     </FrameLayout>
 

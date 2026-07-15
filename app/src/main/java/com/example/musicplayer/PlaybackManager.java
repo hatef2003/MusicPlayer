@@ -97,4 +97,19 @@ public class PlaybackManager {
     public Song getCurrentSong() { return musicService != null ? musicService.getCurrentSong() : null; }
     public int getPosition() { return musicService != null ? musicService.getPosition() : 0; }
     public int getDuration() { return musicService != null ? musicService.getDuration() : 0; }
+    public int getQueueSize() { return musicService != null ? musicService.getQueueSize() : 0; }
+    public int getCurrentIndex() { return musicService != null ? musicService.getCurrentIndex() : 0; }
+
+    public List<Song> getQueue() {
+        if (musicService != null) return musicService.getQueue();
+        return new ArrayList<>();
+    }
+
+    public void moveQueueItem(int from, int to) {
+        if (musicService != null) musicService.moveQueueItem(from, to);
+    }
+
+    public void playFromQueue(int index) {
+        if (musicService != null) musicService.playFromQueue(index);
+    }
 }

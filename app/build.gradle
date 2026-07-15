@@ -36,4 +36,5 @@ dependencies {
     implementation 'androidx.media:media:1.7.0'
     implementation 'androidx.mediarouter:mediarouter:1.7.0'
     implementation 'com.github.bumptech.glide:glide:4.16.0'
+    implementation 'net.jthink:jaudiotagger:3.0.1'
 }

@@ -10,14 +10,27 @@
         android:orientation="vertical"
         android:padding="16dp">
 
+        <!-- Terminal header -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/settings_theme"
-            android:textColor="@color/text_primary"
-            android:textSize="14sp"
+            android:text="// settings"
+            android:textColor="@color/terminal_green"
+            android:textSize="12sp"
             android:textStyle="bold"
             android:fontFamily="monospace"
+            android:layout_marginBottom="16dp" />
+
+        <!-- ═══ THEME ═══ -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="THEME"
+            android:textColor="@color/terminal_green"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:fontFamily="monospace"
+            android:letterSpacing="0.15"
             android:layout_marginBottom="8dp" />
 
         <RadioGroup
@@ -30,42 +43,47 @@
                 android:id="@+id/themeSystem"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/theme_system"
+                android:text="System"
                 android:textColor="@color/text_primary"
-                android:fontFamily="monospace" />
+                android:fontFamily="monospace"
+                android:buttonTint="?attr/colorSecondary" />
 
             <RadioButton
                 android:id="@+id/themeLight"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/theme_light"
+                android:text="Light"
                 android:textColor="@color/text_primary"
-                android:fontFamily="monospace" />
+                android:fontFamily="monospace"
+                android:buttonTint="?attr/colorSecondary" />
 
             <RadioButton
                 android:id="@+id/themeDark"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/theme_dark"
+                android:text="Dark"
                 android:textColor="@color/text_primary"
-                android:fontFamily="monospace" />
+                android:fontFamily="monospace"
+                android:buttonTint="?attr/colorSecondary" />
         </RadioGroup>
 
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:background="@color/divider"
+            android:background="@color/terminal_dim"
             android:layout_marginTop="16dp"
             android:layout_marginBottom="16dp" />
 
+        <!-- ═══ SORT ═══ -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/settings_sort"
-            android:textColor="@color/text_primary"
-            android:textSize="14sp"
+            android:text="DEFAULT_SORT"
+            android:textColor="@color/terminal_green"
+            android:textSize="11sp"
             android:textStyle="bold"
             android:fontFamily="monospace"
+            android:letterSpacing="0.15"
             android:layout_marginBottom="8dp" />
 
         <RadioGroup
@@ -78,58 +96,65 @@
                 android:id="@+id/sortTitle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/sort_title"
+                android:text="Title"
                 android:textColor="@color/text_primary"
-                android:fontFamily="monospace" />
+                android:fontFamily="monospace"
+                android:buttonTint="?attr/colorSecondary" />
 
             <RadioButton
                 android:id="@+id/sortArtist"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/sort_artist"
+                android:text="Artist"
                 android:textColor="@color/text_primary"
-                android:fontFamily="monospace" />
+                android:fontFamily="monospace"
+                android:buttonTint="?attr/colorSecondary" />
 
             <RadioButton
                 android:id="@+id/sortAlbum"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/sort_album"
+                android:text="Album"
                 android:textColor="@color/text_primary"
-                android:fontFamily="monospace" />
+                android:fontFamily="monospace"
+                android:buttonTint="?attr/colorSecondary" />
 
             <RadioButton
                 android:id="@+id/sortDuration"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/sort_duration"
+                android:text="Duration"
                 android:textColor="@color/text_primary"
-                android:fontFamily="monospace" />
+                android:fontFamily="monospace"
+                android:buttonTint="?attr/colorSecondary" />
 
             <RadioButton
                 android:id="@+id/sortDateAdded"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/sort_date_added"
+                android:text="Date Added"
                 android:textColor="@color/text_primary"
-                android:fontFamily="monospace" />
+                android:fontFamily="monospace"
+                android:buttonTint="?attr/colorSecondary" />
         </RadioGroup>
 
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:background="@color/divider"
+            android:background="@color/terminal_dim"
             android:layout_marginTop="16dp"
             android:layout_marginBottom="16dp" />
 
+        <!-- ═══ ACCENT COLOR ═══ -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/settings_accent_color"
-            android:textColor="@color/text_primary"
-            android:textSize="14sp"
+            android:text="ACCENT_COLOR"
+            android:textColor="@color/terminal_green"
+            android:textSize="11sp"
             android:textStyle="bold"
             android:fontFamily="monospace"
+            android:letterSpacing="0.15"
             android:layout_marginBottom="8dp" />
 
         <RadioGroup
@@ -142,39 +167,43 @@
                 android:id="@+id/accentGreen"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/accent_green"
+                android:text="Green"
                 android:textColor="@color/text_primary"
-                android:fontFamily="monospace" />
+                android:fontFamily="monospace"
+                android:buttonTint="?attr/colorSecondary" />
 
             <RadioButton
                 android:id="@+id/accentBlue"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/accent_blue"
+                android:text="Blue"
                 android:textColor="@color/text_primary"
-                android:fontFamily="monospace" />
+                android:fontFamily="monospace"
+                android:buttonTint="?attr/colorSecondary" />
 
             <RadioButton
                 android:id="@+id/accentOrange"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/accent_orange"
+                android:text="Orange"
                 android:textColor="@color/text_primary"
-                android:fontFamily="monospace" />
+                android:fontFamily="monospace"
+                android:buttonTint="?attr/colorSecondary" />
 
             <RadioButton
                 android:id="@+id/accentPurple"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/accent_purple"
+                android:text="Purple"
                 android:textColor="@color/text_primary"
-                android:fontFamily="monospace" />
+                android:fontFamily="monospace"
+                android:buttonTint="?attr/colorSecondary" />
         </RadioGroup>
 
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:background="@color/divider"
+            android:background="@color/terminal_dim"
             android:layout_marginTop="16dp"
             android:layout_marginBottom="16dp" />
 
@@ -182,8 +211,8 @@
             android:id="@+id/versionText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textColor="@color/text_secondary"
-            android:textSize="12sp"
+            android:textColor="@color/terminal_dim"
+            android:textSize="10sp"
             android:fontFamily="monospace" />
 
     </LinearLayout>

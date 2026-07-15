@@ -71,5 +71,16 @@ public class AlbumDetailActivity extends BaseActivity {
             emptyView.setVisibility(View.VISIBLE);
             emptyView.setText("No songs in this album");
         }
+
+        // Highlight currently playing song
+        Song current = PlaybackManager.getInstance(this).getCurrentSong();
+        if (current != null) adapter.setPlayingSongId(current.getId());
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Song current = PlaybackManager.getInstance(this).getCurrentSong();
+        if (current != null && adapter != null) adapter.setPlayingSongId(current.getId());
     }
 }

@@ -1,9 +1,9 @@
 -- Merging decision tree log ---
 manifest
-ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:2:1-61:12
-INJECTED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:2:1-61:12
-INJECTED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:2:1-61:12
-INJECTED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:2:1-61:12
+ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:2:1-72:12
+INJECTED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:2:1-72:12
+INJECTED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:2:1-72:12
+INJECTED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:2:1-72:12
 MERGED from [com.google.android.material:material:1.12.0] C:\Users\Hot-f\.gradle\caches\8.9\transforms\b4d4520d3a7500151f758a57e313542a\transformed\material-1.12.0\AndroidManifest.xml:17:1-24:12
 MERGED from [androidx.constraintlayout:constraintlayout:2.1.4] C:\Users\Hot-f\.gradle\caches\8.9\transforms\7327455338dff4560c262aa7ae95e453\transformed\constraintlayout-2.1.4\AndroidManifest.xml:2:1-11:12
 MERGED from [androidx.mediarouter:mediarouter:1.7.0] C:\Users\Hot-f\.gradle\caches\8.9\transforms\07ff67ceffd52df695d111b665cdce5a\transformed\mediarouter-1.7.0\AndroidManifest.xml:2:1-7:12
@@ -78,21 +78,31 @@ ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:12:5-1
 		ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:13:9-35
 	android:name
 		ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:12:22-77
+uses-permission#android.permission.WRITE_EXTERNAL_STORAGE
+ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:15:5-16:38
+	android:maxSdkVersion
+		ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:16:9-35
+	android:name
+		ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:15:22-78
 uses-permission#android.permission.FOREGROUND_SERVICE
-ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:15:5-77
-	android:name
-		ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:15:22-74
-uses-permission#android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK
-ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:16:5-92
-	android:name
-		ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:16:22-89
-uses-permission#android.permission.POST_NOTIFICATIONS
 ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:18:5-77
 	android:name
 		ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:18:22-74
+uses-permission#android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK
+ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:19:5-92
+	android:name
+		ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:19:22-89
+uses-permission#android.permission.POST_NOTIFICATIONS
+ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:21:5-77
+	android:name
+		ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:21:22-74
+uses-permission#android.permission.INTERNET
+ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:23:5-67
+	android:name
+		ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:23:22-64
 application
-ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:20:5-59:19
-INJECTED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:20:5-59:19
+ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:25:5-70:19
+INJECTED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:25:5-70:19
 MERGED from [com.google.android.material:material:1.12.0] C:\Users\Hot-f\.gradle\caches\8.9\transforms\b4d4520d3a7500151f758a57e313542a\transformed\material-1.12.0\AndroidManifest.xml:22:5-20
 MERGED from [com.google.android.material:material:1.12.0] C:\Users\Hot-f\.gradle\caches\8.9\transforms\b4d4520d3a7500151f758a57e313542a\transformed\material-1.12.0\AndroidManifest.xml:22:5-20
 MERGED from [androidx.constraintlayout:constraintlayout:2.1.4] C:\Users\Hot-f\.gradle\caches\8.9\transforms\7327455338dff4560c262aa7ae95e453\transformed\constraintlayout-2.1.4\AndroidManifest.xml:9:5-20
@@ -111,72 +121,82 @@ MERGED from [androidx.startup:startup-runtime:1.1.1] C:\Users\Hot-f\.gradle\cach
 MERGED from [androidx.startup:startup-runtime:1.1.1] C:\Users\Hot-f\.gradle\caches\8.9\transforms\fb24fd81fb948482846358d35ccc42a2\transformed\startup-runtime-1.1.1\AndroidManifest.xml:25:5-31:19
 	android:extractNativeLibs
 		INJECTED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml
+	android:requestLegacyExternalStorage
+		ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:33:9-52
 	android:appComponentFactory
 		ADDED from [androidx.core:core:1.13.0] C:\Users\Hot-f\.gradle\caches\8.9\transforms\c71f5b93f765c81b68c6363ac2a86f13\transformed\core-1.13.0\AndroidManifest.xml:28:18-86
 	android:supportsRtl
-		ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:26:9-35
+		ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:31:9-35
 	android:label
-		ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:24:9-41
+		ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:29:9-41
 	android:roundIcon
-		ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:25:9-54
+		ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:30:9-54
 	tools:targetApi
-		ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:28:9-29
+		ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:34:9-29
 	android:icon
-		ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:23:9-43
+		ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:28:9-43
 	android:allowBackup
-		ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:22:9-35
+		ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:27:9-35
 	android:theme
-		ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:27:9-49
+		ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:32:9-49
 	android:name
-		ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:21:9-47
+		ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:26:9-47
 activity#com.example.musicplayer.MainActivity
-ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:30:9-37:20
+ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:36:9-43:20
 	android:exported
-		ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:32:13-36
+		ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:38:13-36
 	android:name
-		ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:31:13-41
+		ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:37:13-41
 intent-filter#action:name:android.intent.action.MAIN+category:name:android.intent.category.LAUNCHER
-ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:33:13-36:29
+ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:39:13-42:29
 action#android.intent.action.MAIN
-ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:34:17-69
+ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:40:17-69
 	android:name
-		ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:34:25-66
+		ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:40:25-66
 category#android.intent.category.LAUNCHER
-ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:35:17-77
+ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:41:17-77
 	android:name
-		ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:35:27-74
+		ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:41:27-74
 activity#com.example.musicplayer.AlbumDetailActivity
-ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:39:9-42:58
+ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:45:9-48:58
 	android:parentActivityName
-		ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:42:13-55
+		ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:48:13-55
 	android:exported
-		ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:41:13-37
+		ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:47:13-37
 	android:name
-		ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:40:13-48
+		ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:46:13-48
 activity#com.example.musicplayer.NowPlayingActivity
-ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:44:9-47:58
+ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:50:9-53:58
 	android:parentActivityName
-		ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:47:13-55
+		ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:53:13-55
 	android:exported
-		ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:46:13-37
+		ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:52:13-37
 	android:name
-		ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:45:13-47
+		ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:51:13-47
 activity#com.example.musicplayer.SettingsActivity
-ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:49:9-52:58
+ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:55:9-58:58
 	android:parentActivityName
-		ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:52:13-55
+		ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:58:13-55
 	android:exported
-		ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:51:13-37
+		ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:57:13-37
 	android:name
-		ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:50:13-45
+		ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:56:13-45
+activity#com.example.musicplayer.PlaylistDetailActivity
+ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:60:9-63:58
+	android:parentActivityName
+		ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:63:13-55
+	android:exported
+		ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:62:13-37
+	android:name
+		ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:61:13-51
 service#com.example.musicplayer.MusicService
-ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:54:9-57:61
+ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:65:9-68:61
 	android:exported
-		ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:56:13-37
+		ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:67:13-37
 	android:foregroundServiceType
-		ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:57:13-58
+		ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:68:13-58
 	android:name
-		ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:55:13-41
+		ADDED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml:66:13-41
 uses-sdk
 INJECTED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml reason: use-sdk injection requested
 INJECTED from F:\Project\androidMusicPlayer\app\src\main\AndroidManifest.xml

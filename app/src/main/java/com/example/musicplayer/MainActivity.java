@@ -37,6 +37,7 @@ public class MainActivity extends BaseActivity {
     private TabLayout tabLayout;
     private TracksFragment tracksFragment;
     private AlbumsFragment albumsFragment;
+    private PlaylistsFragment playlistsFragment;
     private SearchView searchView;
     private String currentQuery = "";
     private static final String KEY_SEARCH_QUERY = "search_query";
@@ -46,6 +47,7 @@ public class MainActivity extends BaseActivity {
     private TextView miniTitle;
     private TextView miniArtist;
     private ImageView miniPlayPause;
+    private ImageView miniAlbumArt;
     private SeekBar miniSeekBar;
     private boolean miniUserDragging = false;
 
@@ -67,7 +69,13 @@ public class MainActivity extends BaseActivity {
     };
 
     private final PlaybackManager.Callback callback = (isPlaying, currentSong, position, duration) -> {
-        runOnUiThread(() -> updateMiniPlayer(isPlaying, currentSong, position, duration));
+        runOnUiThread(() -> {
+            updateMiniPlayer(isPlaying, currentSong, position, duration);
+            // Update playing-song highlight in tracks list
+            if (tracksFragment != null && currentSong != null) {
+                tracksFragment.updatePlayingSong(currentSong.getId());
+            }
+        });
     };
 
     private final ActivityResultLauncher<String[]> permissionLauncher =
@@ -96,14 +104,23 @@ public class MainActivity extends BaseActivity {
         miniTitle = findViewById(R.id.miniTitle);
         miniArtist = findViewById(R.id.miniArtist);
         miniPlayPause = findViewById(R.id.miniPlayPause);
+        miniAlbumArt = findViewById(R.id.miniAlbumArt);
         miniSeekBar = findViewById(R.id.miniSeekBar);
 
         tracksFragment = new TracksFragment();
         albumsFragment = new AlbumsFragment();
+        playlistsFragment = new PlaylistsFragment();
 
         viewPager.setAdapter(new PagerAdapter(this));
+        viewPager.setOffscreenPageLimit(2);
         new TabLayoutMediator(tabLayout, viewPager,
-                (tab, position) -> tab.setText(position == 0 ? "Tracks" : "Albums")).attach();
+                (tab, position) -> {
+                    switch (position) {
+                        case 0: tab.setText("Tracks"); break;
+                        case 1: tab.setText("Albums"); break;
+                        case 2: tab.setText("Playlists"); break;
+                    }
+                }).attach();
 
         ImageView settingsButton = findViewById(R.id.settingsButton);
         settingsButton.setOnClickListener(v -> startActivity(new Intent(this, SettingsActivity.class)));
@@ -183,6 +200,8 @@ public class MainActivity extends BaseActivity {
     private void loadMusic() {
         if (tracksFragment != null) tracksFragment.loadSongs();
         if (albumsFragment != null) albumsFragment.loadAlbums();
+        if (playlistsFragment != null) playlistsFragment.loadSongs(
+                com.example.musicplayer.MusicRepository.loadAllSongs(this));
     }
 
     private void applySearch(String query) {
@@ -206,6 +225,10 @@ public class MainActivity extends BaseActivity {
         miniTitle.setText(currentSong.getTitle());
         miniArtist.setText(currentSong.getArtist());
         miniPlayPause.setImageResource(isPlaying ? R.drawable.ic_pause : R.drawable.ic_play);
+        com.bumptech.glide.Glide.with(this)
+                .load(MusicRepository.getAlbumArtUri(currentSong.getAlbumId()))
+                .placeholder(R.drawable.ic_album).error(R.drawable.ic_album)
+                .centerCrop().into(miniAlbumArt);
         if (duration > 0 && !miniUserDragging) {
             miniSeekBar.setMax(duration);
             miniSeekBar.setProgress(position);
@@ -235,10 +258,14 @@ public class MainActivity extends BaseActivity {
         @NonNull
         @Override
         public Fragment createFragment(int position) {
-            return position == 0 ? tracksFragment : albumsFragment;
+            switch (position) {
+                case 0: return tracksFragment;
+                case 1: return albumsFragment;
+                default: return playlistsFragment;
+            }
         }
 
         @Override
-        public int getItemCount() { return 2; }
+        public int getItemCount() { return 3; }
     }
 }

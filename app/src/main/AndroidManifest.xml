@@ -11,11 +11,16 @@
     <!-- Legacy storage permission for Android 12 and below -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" />
+    <!-- Write permission for embedding lyrics into audio files (API ≤ 29) -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="29" />
     <!-- Foreground service for media playback -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
     <!-- Notifications (Android 13+) -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Internet for lyrics API -->
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <application
         android:name=".MusicPlayerApplication"
@@ -25,6 +30,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.MusicPlayer"
+        android:requestLegacyExternalStorage="true"
         tools:targetApi="34">
 
         <activity
@@ -48,6 +54,11 @@
 
         <activity
             android:name=".SettingsActivity"
+            android:exported="false"
+            android:parentActivityName=".MainActivity" />
+
+        <activity
+            android:name=".PlaylistDetailActivity"
             android:exported="false"
             android:parentActivityName=".MainActivity" />
 

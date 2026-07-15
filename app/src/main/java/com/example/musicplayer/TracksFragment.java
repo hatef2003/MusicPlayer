@@ -50,6 +50,10 @@ public class TracksFragment extends Fragment {
             int idx = filteredSongs.indexOf(song);
             PlaybackManager.getInstance(requireContext()).play(filteredSongs, idx);
         });
+        adapter.setOnLongClickListener(song -> {
+            AddToPlaylistDialog dialog = AddToPlaylistDialog.newInstance(song);
+            dialog.show(getParentFragmentManager(), "add_to_playlist");
+        });
         recyclerView.setAdapter(adapter);
 
         if (sortLabel != null) {
@@ -93,6 +97,11 @@ public class TracksFragment extends Fragment {
         applyFilter();
     }
 
+    /** Update which song is currently playing so the adapter can highlight it */
+    public void updatePlayingSong(long songId) {
+        if (adapter != null) adapter.setPlayingSongId(songId);
+    }
+
     public void setFilterQuery(String query) {
         this.currentQuery = query == null ? "" : query.trim().toLowerCase(Locale.ROOT);
         applyFilter();
@@ -113,7 +122,14 @@ public class TracksFragment extends Fragment {
             }
         }
         if (sortLabel != null) {
-            sortLabel.setText(getString(R.string.sort_label, getSortDisplayName(currentSort)));
+            String sortValue = getSortDisplayName(currentSort);
+            String full = "Sort: " + sortValue + " ▼";
+            android.text.SpannableString span = new android.text.SpannableString(full);
+            span.setSpan(new android.text.style.ForegroundColorSpan(
+                    getResources().getColor(R.color.terminal_green)), 0, 5, 0);
+            span.setSpan(new android.text.style.ForegroundColorSpan(
+                    getResources().getColor(R.color.text_primary)), 5, full.length(), 0);
+            sortLabel.setText(span);
             sortLabel.setVisibility(View.VISIBLE);
         }
     }

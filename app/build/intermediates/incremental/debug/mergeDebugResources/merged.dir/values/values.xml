@@ -649,7 +649,7 @@
     <color name="abc_search_url_text_pressed">@android:color/black</color>
     <color name="abc_search_url_text_selected">@android:color/black</color>
     <color name="accent_blue">#00A8FF</color>
-    <color name="accent_green">#00FF41</color>
+    <color name="accent_green">#39FF6A</color>
     <color name="accent_material_dark">@color/material_deep_teal_200</color>
     <color name="accent_material_light">@color/material_deep_teal_500</color>
     <color name="accent_orange">#FF9D00</color>
@@ -661,6 +661,7 @@
     <color name="background_material_dark">@color/material_grey_850</color>
     <color name="background_material_light">@color/material_grey_50</color>
     <color name="black">#FF000000</color>
+    <color name="border_green">#2EFF6D</color>
     <color name="bright_foreground_disabled_material_dark">#80ffffff</color>
     <color name="bright_foreground_disabled_material_light">#80000000</color>
     <color name="bright_foreground_inverse_material_dark">@color/bright_foreground_material_light</color>
@@ -714,7 +715,7 @@
     <color name="dim_foreground_disabled_material_light">#80323232</color>
     <color name="dim_foreground_material_dark">#ffbebebe</color>
     <color name="dim_foreground_material_light">#ff323232</color>
-    <color name="divider">#003300</color>
+    <color name="divider">#1A1A1A</color>
     <color name="error_color_material_dark">#ff7043</color>
     <color name="error_color_material_light">#ff5722</color>
     <color name="foreground_material_dark">@android:color/white</color>
@@ -950,13 +951,13 @@
     <color name="material_personalized_color_text_primary_inverse_disable_only">#FFFFFF</color>
     <color name="material_personalized_color_text_secondary_and_tertiary_inverse">#FFFFFF</color>
     <color name="material_personalized_color_text_secondary_and_tertiary_inverse_disabled">#FFFFFF</color>
-    <color name="md_accent">#00FF41</color>
-    <color name="md_bg">#000000</color>
-    <color name="md_bg_dark">#000000</color>
-    <color name="md_primary">#0A0A0A</color>
-    <color name="md_primary_dark">#000000</color>
-    <color name="md_primary_light">#00FF41</color>
-    <color name="md_surface">#0A0A0A</color>
+    <color name="md_accent">#39FF6A</color>
+    <color name="md_bg">#050505</color>
+    <color name="md_bg_dark">#050505</color>
+    <color name="md_primary">#050505</color>
+    <color name="md_primary_dark">#050505</color>
+    <color name="md_primary_light">#39FF6A</color>
+    <color name="md_surface">#101010</color>
     <color name="mr_cast_meta_black_scrim">#99000000</color>
     <color name="mr_cast_meta_default_background">#25272B</color>
     <color name="mr_cast_meta_default_text_color">#FFFFFF</color>
@@ -1008,8 +1009,10 @@
     <color name="switch_thumb_normal_material_light">#fff1f1f1</color>
     <color name="teal_200">#FF03DAC5</color>
     <color name="teal_700">#FF018786</color>
-    <color name="text_primary">#00FF41</color>
-    <color name="text_secondary">#00B32C</color>
+    <color name="terminal_dim">#444444</color>
+    <color name="terminal_green">#39FF6A</color>
+    <color name="text_primary">#F2F2F2</color>
+    <color name="text_secondary">#888888</color>
     <color name="tooltip_background_dark">#e6616161</color>
     <color name="tooltip_background_light">#e6FFFFFF</color>
     <color name="white">#FFFFFFFF</color>
@@ -2269,6 +2272,7 @@
     <string name="sort_title">Title</string>
     <string name="status_bar_notification_info_overflow">999+</string>
     <string name="tab_albums">Albums</string>
+    <string name="tab_playlists">Playlists</string>
     <string name="tab_tracks">Tracks</string>
     <string name="theme_dark">Dark</string>
     <string name="theme_light">Light</string>
@@ -6140,6 +6144,12 @@
     <item name="cornerSizeBottomLeft">@dimen/mtrl_textinput_box_corner_radius_small</item>
     <item name="cornerSizeBottomRight">@dimen/mtrl_textinput_box_corner_radius_small</item>
   </style>
+    <style name="TerminalTabText" parent="TextAppearance.Design.Tab">
+        <item name="android:textSize">16sp</item>
+        <item name="android:fontFamily">monospace</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:letterSpacing">0.08</item>
+    </style>
     <style name="TextAppearance.AppCompat" parent="Base.TextAppearance.AppCompat"/>
     <style name="TextAppearance.AppCompat.Body1" parent="Base.TextAppearance.AppCompat.Body1"/>
     <style name="TextAppearance.AppCompat.Body2" parent="Base.TextAppearance.AppCompat.Body2"/>

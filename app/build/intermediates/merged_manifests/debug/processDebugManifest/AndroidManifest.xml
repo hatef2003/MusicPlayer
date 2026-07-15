@@ -18,11 +18,17 @@
     <uses-permission
         android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" />
+    <!-- Write permission for embedding lyrics into audio files (API ≤ 29) -->
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="29" />
     <!-- Foreground service for media playback -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
     <!-- Notifications (Android 13+) -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Internet for lyrics API -->
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <permission
         android:name="com.example.musicplayer.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
@@ -38,6 +44,7 @@
         android:extractNativeLibs="false"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
+        android:requestLegacyExternalStorage="true"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:testOnly="true"
@@ -61,6 +68,10 @@
             android:parentActivityName="com.example.musicplayer.MainActivity" />
         <activity
             android:name="com.example.musicplayer.SettingsActivity"
+            android:exported="false"
+            android:parentActivityName="com.example.musicplayer.MainActivity" />
+        <activity
+            android:name="com.example.musicplayer.PlaylistDetailActivity"
             android:exported="false"
             android:parentActivityName="com.example.musicplayer.MainActivity" />
 

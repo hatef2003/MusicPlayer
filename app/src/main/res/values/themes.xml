@@ -35,4 +35,10 @@
         <item name="colorControlActivated">@color/accent_purple</item>
         <item name="colorControlHighlight">@color/accent_purple</item>
     </style>
+    <style name="TerminalTabText" parent="TextAppearance.Design.Tab">
+        <item name="android:textSize">16sp</item>
+        <item name="android:fontFamily">monospace</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:letterSpacing">0.08</item>
+    </style>
 </resources>
