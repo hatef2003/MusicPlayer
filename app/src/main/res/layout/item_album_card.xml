@@ -1,60 +1,137 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="6dp"
-    android:background="@color/md_surface"
+    android:layout_margin="8dp"
+    android:elevation="0dp"
+    android:background="@drawable/bg_album_card"
     android:orientation="vertical"
-    android:padding="10dp">
+    android:padding="0dp">
 
-    <ImageView
-        android:id="@+id/albumArt"
+    <!-- Album artwork -->
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="110dp"
-        android:background="@color/md_primary"
-        android:contentDescription="Album art"
-        android:scaleType="centerCrop"
-        android:src="@drawable/ic_album" />
+        android:layout_height="150dp">
 
-    <!-- Green border under art -->
+        <ImageView
+            android:id="@+id/albumArt"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@color/md_primary"
+            android:contentDescription="Album art"
+            android:scaleType="centerCrop"
+            android:src="@drawable/ic_album" />
+
+        <!-- Green border overlay on artwork -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/album_border" />
+
+        <!-- Three-dot menu (top-right) -->
+        <TextView
+            android:id="@+id/albumMenu"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_gravity="top|end"
+            android:layout_margin="4dp"
+            android:gravity="center"
+            android:fontFamily="monospace"
+            android:text="\u22EE"
+            android:textColor="@color/text_primary"
+            android:textSize="18sp"
+            android:background="@drawable/bg_album_menu_btn"
+            android:clickable="true"
+            android:focusable="true" />
+
+        <!-- PLAYING label (hidden by default) -->
+        <TextView
+            android:id="@+id/albumPlaying"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="top|start"
+            android:layout_margin="8dp"
+            android:background="@color/terminal_green"
+            android:fontFamily="monospace"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:paddingTop="3dp"
+            android:paddingBottom="3dp"
+            android:text="PLAYING"
+            android:textColor="@color/md_bg"
+            android:textSize="9sp"
+            android:textStyle="bold"
+            android:visibility="gone" />
+    </FrameLayout>
+
+    <!-- Separator line -->
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="@color/border_green" />
+        android:background="#1A39FF6A" />
 
-    <TextView
-        android:id="@+id/albumName"
+    <!-- Info section -->
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="6dp"
-        android:ellipsize="end"
-        android:fontFamily="monospace"
-        android:singleLine="true"
-        android:textColor="@color/text_primary"
-        android:textSize="13sp"
-        android:textStyle="bold"
-        tools:text="Album Name" />
+        android:orientation="vertical"
+        android:padding="12dp">
 
-    <TextView
-        android:id="@+id/albumArtist"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:ellipsize="end"
-        android:fontFamily="monospace"
-        android:singleLine="true"
-        android:textColor="@color/text_secondary"
-        android:textSize="11sp"
-        tools:text="Artist" />
+        <!-- Album name -->
+        <TextView
+            android:id="@+id/albumName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:fontFamily="monospace"
+            android:singleLine="true"
+            android:textColor="@color/terminal_green"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            tools:text="Meteora" />
 
-    <TextView
-        android:id="@+id/albumCount"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="2dp"
-        android:fontFamily="monospace"
-        android:textColor="@color/terminal_green"
-        android:textSize="10sp"
-        tools:text="12 tracks" />
+        <!-- Artist -->
+        <TextView
+            android:id="@+id/albumArtist"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:ellipsize="end"
+            android:fontFamily="monospace"
+            android:singleLine="true"
+            android:textColor="@color/text_secondary"
+            android:textSize="13sp"
+            tools:text="Linkin Park" />
+
+        <!-- Metadata row: track count + duration -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:id="@+id/albumCount"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:fontFamily="monospace"
+                android:textColor="@color/terminal_dim"
+                android:textSize="11sp"
+                tools:text="TRACKS 12" />
+
+            <TextView
+                android:id="@+id/albumDuration"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="monospace"
+                android:textColor="@color/terminal_dim"
+                android:textSize="11sp"
+                tools:text="42 min" />
+        </LinearLayout>
+    </LinearLayout>
 
 </LinearLayout>

@@ -1,17 +1,21 @@
 package com.example.musicplayer;
 
-import androidx.annotation.NonNull;
 import android.Manifest;
+import androidx.appcompat.app.AlertDialog;
+import androidx.annotation.NonNull;
 import android.content.ActivityNotFoundException;
+import android.util.Log;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.media.MediaMetadataRetriever;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.speech.RecognizerIntent;
+import android.content.res.ColorStateList;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -35,6 +39,8 @@ import com.bumptech.glide.Glide;
 import com.example.musicplayer.model.Song;
 
 import java.util.ArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
@@ -79,9 +85,11 @@ public class NowPlayingActivity extends BaseActivity {
     private LinearLayoutManager lyricsLayoutManager;
     private LinearLayout noLyricsLayout;
     private LinearLayout speechBtn;
+    private TextView identifyBtn;
+    private final ExecutorService networkExecutor = Executors.newSingleThreadExecutor();
 
     // Playback controls
-    private ImageView playPauseBtn, prevBtn, nextBtn;
+    private ImageView playPauseBtn, prevBtn, nextBtn, shuffleBtn, repeatBtn;
 
     private Song currentSong;
     private List<LyricLine> currentLyrics = new ArrayList<>();
@@ -128,6 +136,10 @@ public class NowPlayingActivity extends BaseActivity {
         setContentView(R.layout.activity_now_playing_v2);
         density = getResources().getDisplayMetrics().density;
 
+        // Apply status bar inset to root layout, nav bar inset to playback controls
+        applyStatusBarInset(findViewById(android.R.id.content));
+        applyNavigationBarInset(findViewById(R.id.npPlaybackControls));
+
         // Top bar
         backBtn = findViewById(R.id.npBackBtn);
         mediaRouteButton = findViewById(R.id.mediaRouteButton);
@@ -165,11 +177,14 @@ public class NowPlayingActivity extends BaseActivity {
         lyricsRecycler = findViewById(R.id.npLyricsRecycler);
         noLyricsLayout = findViewById(R.id.npNoLyricsLayout);
         speechBtn = findViewById(R.id.npSpeechBtn);
+        identifyBtn = findViewById(R.id.npIdentifyBtn);
 
         // Playback controls
         playPauseBtn = findViewById(R.id.npPlayPause);
         prevBtn = findViewById(R.id.npPrev);
         nextBtn = findViewById(R.id.npNext);
+        shuffleBtn = findViewById(R.id.npShuffle);
+        repeatBtn = findViewById(R.id.npRepeat);
 
         // Set up synced lyrics RecyclerView
         lyricsAdapter = new SyncedLyricsAdapter();
@@ -198,11 +213,11 @@ public class NowPlayingActivity extends BaseActivity {
             @Override
             public void clearView(@NonNull RecyclerView rv, @NonNull RecyclerView.ViewHolder vh) {
                 super.clearView(rv, vh);
-                // Persist the reorder to the service
+                // Persist the reorder to the service WITHOUT restarting playback
                 PlaybackManager pm = PlaybackManager.getInstance(NowPlayingActivity.this);
                 List<Song> reordered = queueAdapter.getSongs();
-                int newCurrentIndex = -1;
                 Song currentSong = pm.getCurrentSong();
+                int newCurrentIndex = 0;
                 if (currentSong != null) {
                     for (int i = 0; i < reordered.size(); i++) {
                         if (reordered.get(i).getId() == currentSong.getId()) {
@@ -211,12 +226,8 @@ public class NowPlayingActivity extends BaseActivity {
                         }
                     }
                 }
-                // Reset queue in service with the new order
-                if (!reordered.isEmpty()) {
-                    pm.play(reordered, newCurrentIndex >= 0 ? newCurrentIndex : 0);
-                    if (!pm.isPlaying()) pm.pause(); // don't restart playback, just set queue
-                }
-                queueAdapter.setCurrentIndex(newCurrentIndex >= 0 ? newCurrentIndex : pm.getCurrentIndex());
+                pm.setQueueSilent(reordered, newCurrentIndex);
+                queueAdapter.setCurrentIndex(newCurrentIndex);
             }
 
             @Override
@@ -233,7 +244,10 @@ public class NowPlayingActivity extends BaseActivity {
                 PlaybackManager.getInstance(NowPlayingActivity.this).playFromQueue(position);
             }
             @Override public void onSongRemoved(int position) {
-                // Remove is visual-only; the service queue is rebuilt on clearView
+                PlaybackManager pm = PlaybackManager.getInstance(NowPlayingActivity.this);
+                pm.removeFromQueue(position);
+                // Refresh queue display after removal
+                queueAdapter.setQueue(pm.getQueue(), pm.getCurrentIndex());
             }
             @Override public void onItemMoved(int from, int to) { }
         });
@@ -266,6 +280,7 @@ public class NowPlayingActivity extends BaseActivity {
         fetchBtn.setOnClickListener(v -> refreshLyrics());
         syncToggle.setOnClickListener(v -> toggleSync());
         speechBtn.setOnClickListener(v -> startSpeechRecognition());
+        identifyBtn.setOnClickListener(v -> identifySong());
 
         mediaRouteButton.setRouteSelector(new MediaRouteSelector.Builder()
                 .addControlCategory(MediaControlIntent.CATEGORY_LIVE_AUDIO)
@@ -279,6 +294,24 @@ public class NowPlayingActivity extends BaseActivity {
         prevBtn.setOnClickListener(v -> pm.prev());
         nextBtn.setOnClickListener(v -> pm.next());
 
+        shuffleBtn.setOnClickListener(v -> {
+            pm.toggleShuffle();
+            updateShuffleRepeatUI(pm);
+            Toast.makeText(this, pm.isShuffleOn() ? "Shuffle ON" : "Shuffle OFF", Toast.LENGTH_SHORT).show();
+        });
+
+        repeatBtn.setOnClickListener(v -> {
+            pm.toggleRepeat();
+            updateShuffleRepeatUI(pm);
+            String mode;
+            switch (pm.getRepeatMode()) {
+                case ALL: mode = "Repeat ALL"; break;
+                case ONE: mode = "Repeat ONE"; break;
+                default: mode = "Repeat OFF"; break;
+            }
+            Toast.makeText(this, mode, Toast.LENGTH_SHORT).show();
+        });
+
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override public void onProgressChanged(SeekBar sb, int p, boolean fromUser) {
                 if (fromUser) currentTime.setText(formatTime(p));
@@ -291,6 +324,7 @@ public class NowPlayingActivity extends BaseActivity {
 
         Song current = pm.getCurrentSong();
         if (current != null) updateSongDisplay(current, pm.isPlaying(), pm.getPosition(), pm.getDuration());
+        updateShuffleRepeatUI(pm);
     }
 
     // ═══ TAB SWITCHING ═══
@@ -598,6 +632,156 @@ public class NowPlayingActivity extends BaseActivity {
         return sb.toString();
     }
 
+    // ═══ IDENTIFY SONG (AudD) ═══
+
+    private boolean identifyingInProgress = false;
+    // Pending state for retrying tag write after user grants file-write permission
+    private long pendingTagSongId = -1;
+    private Uri pendingTagUri = null;
+    private String pendingTagTitle = null;
+    private String pendingTagArtist = null;
+    private String pendingTagAlbum = null;
+
+    private void identifySong() {
+        if (currentSong == null || identifyingInProgress) return;
+
+        SettingsManager sm = new SettingsManager(this);
+        String apiKey = sm.getAuddApiKey();
+        if (apiKey.isEmpty()) {
+            Toast.makeText(this, "Set your AudD API key in Settings first", Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        identifyingInProgress = true;
+        identifyBtn.setEnabled(false);
+        identifyBtn.setAlpha(0.4f);
+        Toast.makeText(this, "Identifying...", Toast.LENGTH_SHORT).show();
+
+        final Uri songUri = currentSong.getContentUri();
+        final long songId = currentSong.getId();
+        final String selectedKey = apiKey;
+
+        networkExecutor.execute(() -> {
+            try {
+                AuddService.Result result = AuddService.identify(this, songUri, selectedKey);
+                runOnUiThread(() -> {
+                    identifyingInProgress = false;
+                    identifyBtn.setEnabled(true);
+                    identifyBtn.setAlpha(1.0f);
+                    if (result == null) {
+                        Toast.makeText(this, "Song not recognized", Toast.LENGTH_SHORT).show();
+                    } else {
+                        showIdentifyUpdateDialog(songId, result);
+                    }
+                });
+            } catch (Exception e) {
+                Log.e("NowPlaying", "AudD identify failed", e);
+                runOnUiThread(() -> {
+                    identifyingInProgress = false;
+                    identifyBtn.setEnabled(true);
+                    identifyBtn.setAlpha(1.0f);
+                    Toast.makeText(this, "Identification failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                });
+            }
+        });
+    }
+
+    private void showIdentifyUpdateDialog(long songId, AuddService.Result result) {
+        LinearLayout layout = new LinearLayout(this);
+        layout.setOrientation(LinearLayout.VERTICAL);
+        int pad = (int) (20 * density);
+        layout.setPadding(pad, pad, pad, pad);
+
+        TextView header = new TextView(this);
+        header.setText("Song identified! Update metadata?");
+        header.setTextColor(getAccentColor());
+        header.setTextSize(16);
+        header.setTypeface(android.graphics.Typeface.MONOSPACE);
+        header.setTypeface(null, android.graphics.Typeface.BOLD);
+        layout.addView(header);
+
+        // Show each field as: current → new
+        String[] labels = {"Title", "Artist", "Album"};
+        String[] current = {currentSong.getTitle(), currentSong.getArtist(), currentSong.getAlbum()};
+        String[] discovered = {result.title, result.artist, result.album};
+
+        for (int i = 0; i < labels.length; i++) {
+            if (discovered[i] == null || discovered[i].isEmpty()) continue;
+            boolean changed = !discovered[i].equalsIgnoreCase(current[i]);
+
+            TextView label = new TextView(this);
+            label.setText(labels[i] + ":");
+            label.setTextColor(getAccentColor());
+            label.setTextSize(12);
+            label.setTypeface(android.graphics.Typeface.MONOSPACE);
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            lp.topMargin = (int) (12 * density);
+            label.setLayoutParams(lp);
+            layout.addView(label);
+
+            TextView value = new TextView(this);
+            String display = changed ? current[i] + "  →  " + discovered[i] : discovered[i] + " (unchanged)";
+            value.setText(display);
+            value.setTextColor(ContextCompat.getColor(this, changed ? R.color.text_primary : R.color.text_secondary));
+            value.setTextSize(13);
+            value.setTypeface(android.graphics.Typeface.MONOSPACE);
+            layout.addView(value);
+        }
+
+        new AlertDialog.Builder(this)
+                .setView(layout)
+                .setPositiveButton("Update", (dialog, which) -> {
+                    IntentSender[] senderOut = new IntentSender[1];
+                    // Pass a callback so UI refreshes AFTER MediaScanner re-indexes the file
+                    boolean updated = AuddService.updateSongMetadata(
+                            this, songId, currentSong.getContentUri(),
+                            result.title, result.artist, result.album, senderOut,
+                            () -> runOnUiThread(() -> {
+                                // MediaScanner finished — MediaStore now has the new metadata
+                                PlaybackManager pm = PlaybackManager.getInstance(this);
+                                pm.refreshCurrentSong(this);
+                                Song refreshed = pm.getCurrentSong();
+                                if (refreshed != null) {
+                                    currentSong = refreshed;
+                                    updateSongDisplay(refreshed, pm.isPlaying(), pm.getPosition(), pm.getDuration());
+                                }
+                            }));
+                    if (updated) {
+                        if (senderOut[0] != null) {
+                            pendingTagSongId = songId;
+                            pendingTagUri = currentSong.getContentUri();
+                            pendingTagTitle = result.title;
+                            pendingTagArtist = result.artist;
+                            pendingTagAlbum = result.album;
+                            Toast.makeText(this, "Requesting permission for file tags...", Toast.LENGTH_SHORT).show();
+                            try {
+                                startIntentSenderForResult(senderOut[0], WRITE_REQ_INTENT, null, 0, 0, 0);
+                            } catch (IntentSender.SendIntentException e) {
+                                Toast.makeText(this, "Permission error for file tags", Toast.LENGTH_SHORT).show();
+                            }
+                        } else {
+                            Toast.makeText(this, "Metadata updated. Refreshing...", Toast.LENGTH_SHORT).show();
+                        }
+                    } else if (senderOut[0] != null) {
+                        pendingTagSongId = songId;
+                        pendingTagUri = currentSong.getContentUri();
+                        pendingTagTitle = result.title;
+                        pendingTagArtist = result.artist;
+                        pendingTagAlbum = result.album;
+                        try {
+                            startIntentSenderForResult(senderOut[0], WRITE_REQ_INTENT, null, 0, 0, 0);
+                        } catch (IntentSender.SendIntentException e) {
+                            Toast.makeText(this, "Permission error", Toast.LENGTH_SHORT).show();
+                        }
+                    } else {
+                        Toast.makeText(this, "Could not update metadata", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
     // ═══ SPEECH ═══
 
     private void startSpeechRecognition() {
@@ -624,8 +808,39 @@ public class NowPlayingActivity extends BaseActivity {
 
     @Override protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == WRITE_REQ_INTENT && resultCode == RESULT_OK) {
-            saveLyricsToFile();
+        if (requestCode == WRITE_REQ_INTENT) {
+            if (resultCode == RESULT_OK) {
+                // Check if we have a pending tag write from identify flow
+                if (pendingTagUri != null && pendingTagSongId >= 0) {
+                    // Call the FULL update method with callback so UI refreshes after scan
+                    boolean updated = AuddService.updateSongMetadata(
+                            this, pendingTagSongId, pendingTagUri,
+                            pendingTagTitle, pendingTagArtist, pendingTagAlbum, null,
+                            () -> runOnUiThread(() -> {
+                                // MediaScanner finished — refresh from updated MediaStore
+                                PlaybackManager pm = PlaybackManager.getInstance(this);
+                                pm.refreshCurrentSong(this);
+                                Song refreshed = pm.getCurrentSong();
+                                if (refreshed != null) {
+                                    currentSong = refreshed;
+                                    updateSongDisplay(refreshed, pm.isPlaying(), pm.getPosition(), pm.getDuration());
+                                }
+                            }));
+                    if (updated) {
+                        Toast.makeText(this, "File tags written. Refreshing...", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(this, "Could not update metadata after permission grant", Toast.LENGTH_SHORT).show();
+                    }
+                    pendingTagUri = null;
+                    pendingTagSongId = -1;
+                } else {
+                    saveLyricsToFile();
+                }
+            } else {
+                // Permission denied — clear any pending tag state
+                pendingTagUri = null;
+                pendingTagSongId = -1;
+            }
         }
         if (requestCode == SPEECH_REQUEST && resultCode == RESULT_OK && data != null) {
             ArrayList<String> results = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
@@ -652,6 +867,31 @@ public class NowPlayingActivity extends BaseActivity {
         return ContextCompat.getColor(this, R.color.terminal_green);
     }
 
+    private void updateShuffleRepeatUI(PlaybackManager pm) {
+        int accent = getAccentColor();
+        int dim = ContextCompat.getColor(this, R.color.text_secondary);
+
+        // Shuffle
+        shuffleBtn.setImageTintList(ColorStateList.valueOf(pm.isShuffleOn() ? accent : dim));
+        shuffleBtn.setAlpha(pm.isShuffleOn() ? 1.0f : 0.5f);
+
+        // Repeat
+        MusicService.RepeatMode mode = pm.getRepeatMode();
+        if (mode == MusicService.RepeatMode.OFF) {
+            repeatBtn.setImageResource(R.drawable.ic_repeat);
+            repeatBtn.setImageTintList(ColorStateList.valueOf(dim));
+            repeatBtn.setAlpha(0.5f);
+        } else if (mode == MusicService.RepeatMode.ALL) {
+            repeatBtn.setImageResource(R.drawable.ic_repeat);
+            repeatBtn.setImageTintList(ColorStateList.valueOf(accent));
+            repeatBtn.setAlpha(1.0f);
+        } else { // ONE
+            repeatBtn.setImageResource(R.drawable.ic_repeat_one);
+            repeatBtn.setImageTintList(ColorStateList.valueOf(accent));
+            repeatBtn.setAlpha(1.0f);
+        }
+    }
+
     private String formatTime(int msec) {
         int s = msec / 1000;
         return String.format(Locale.US, "%d:%02d", s / 60, s % 60);
@@ -668,5 +908,10 @@ public class NowPlayingActivity extends BaseActivity {
         super.onStop();
         handler.removeCallbacks(updateRunnable);
         PlaybackManager.getInstance(this).removeCallback(callback);
+    }
+
+    @Override protected void onDestroy() {
+        super.onDestroy();
+        networkExecutor.shutdownNow();
     }
 }

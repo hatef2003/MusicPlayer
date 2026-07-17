@@ -168,6 +168,12 @@ public class MainActivity extends BaseActivity {
             }
         });
 
+        // Apply status bar inset to the custom header so it's not covered
+        applyStatusBarInset(findViewById(R.id.header));
+
+        // Apply navigation bar inset to the mini player so it's not hidden
+        applyNavigationBarInset(findViewById(R.id.miniPlayer));
+
         checkPermissionsAndLoad();
     }
 
@@ -208,6 +214,15 @@ public class MainActivity extends BaseActivity {
         currentQuery = query == null ? "" : query;
         if (tracksFragment != null) tracksFragment.setFilterQuery(currentQuery);
         if (albumsFragment != null) albumsFragment.setFilterQuery(currentQuery);
+    }
+
+    /** Called from AlbumsFragment when user taps "Go to Artist" in album card menu. */
+    public void searchByArtist(String artist) {
+        if (artist == null || artist.isEmpty()) return;
+        // Set the search query and switch to Tracks tab
+        searchView.setQuery(artist, false);
+        applySearch(artist);
+        viewPager.setCurrentItem(0, true);
     }
 
     @Override

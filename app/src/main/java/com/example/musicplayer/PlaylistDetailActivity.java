@@ -43,6 +43,10 @@ public class PlaylistDetailActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_playlist_detail);
 
+        // Apply status bar inset to root layout, nav bar inset to song list
+        applyStatusBarInset(findViewById(android.R.id.content));
+        applyNavigationBarInset(findViewById(R.id.plRecyclerView));
+
         playlistId = getIntent().getLongExtra("playlist_id", -1);
         if (playlistId == -1) {
             finish();

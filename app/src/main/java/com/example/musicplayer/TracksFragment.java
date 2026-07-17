@@ -71,8 +71,9 @@ public class TracksFragment extends Fragment {
         SettingsManager.TracksSort savedSort = getSettingsManager().getTracksSort();
         if (savedSort != currentSort) {
             currentSort = savedSort;
-            applyFilter();
         }
+        // Always reload from MediaStore so metadata changes (e.g. from AudD identify) are reflected
+        loadSongs();
     }
 
     public void loadSongs() {

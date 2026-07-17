@@ -15,6 +15,7 @@ import com.example.musicplayer.model.Song;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class AlbumDetailActivity extends BaseActivity {
 
@@ -30,14 +31,22 @@ public class AlbumDetailActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_album_detail);
 
+        // Apply status bar inset to root layout, nav bar inset to song list
+        applyStatusBarInset(findViewById(android.R.id.content));
+        applyNavigationBarInset(findViewById(R.id.detailRecyclerView));
+
         long albumId = getIntent().getLongExtra(EXTRA_ALBUM_ID, -1);
         String albumName = getIntent().getStringExtra(EXTRA_ALBUM_NAME);
         String albumArtist = getIntent().getStringExtra(EXTRA_ALBUM_ARTIST);
 
+        ImageView backBtn = findViewById(R.id.detailBackBtn);
         TextView nameView = findViewById(R.id.detailAlbumName);
         TextView artistView = findViewById(R.id.detailAlbumArtist);
+        TextView metaView = findViewById(R.id.detailAlbumMeta);
         TextView emptyView = findViewById(R.id.emptyText);
         RecyclerView recyclerView = findViewById(R.id.detailRecyclerView);
+
+        backBtn.setOnClickListener(v -> finish());
 
         nameView.setText(albumName != null ? albumName : "Album");
         artistView.setText(albumArtist != null ? albumArtist : "");
@@ -58,18 +67,27 @@ public class AlbumDetailActivity extends BaseActivity {
         recyclerView.setAdapter(adapter);
 
         // Load album songs
+        Album loadedAlbum = null;
         List<Album> albums = MusicRepository.loadAlbums(this);
         for (Album a : albums) {
             if (a.getId() == albumId) {
+                loadedAlbum = a;
                 songs.addAll(a.getSongs());
                 break;
             }
         }
         adapter.notifyDataSetChanged();
 
+        // Show track count + duration
+        if (loadedAlbum != null) {
+            int count = loadedAlbum.getSongCount();
+            int totalMin = (int) (loadedAlbum.getTotalDuration() / 60000);
+            metaView.setText(String.format(Locale.US, "%d tracks \u2022 %d min", count, totalMin));
+        }
+
         if (songs.isEmpty()) {
             emptyView.setVisibility(View.VISIBLE);
-            emptyView.setText("No songs in this album");
+            emptyView.setText("// no songs in album");
         }
 
         // Highlight currently playing song

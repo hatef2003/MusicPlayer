@@ -57,7 +57,7 @@ public class QueueAdapter extends RecyclerView.Adapter<QueueAdapter.QueueHolder>
     }
 
     public List<Song> getSongs() {
-        return songs;
+        return new ArrayList<>(songs);
     }
 
     @NonNull
@@ -101,16 +101,16 @@ public class QueueAdapter extends RecyclerView.Adapter<QueueAdapter.QueueHolder>
 
         // Click to play from this position
         h.itemView.setOnClickListener(v -> {
-            if (listener != null) listener.onSongClick(h.getAdapterPosition());
+            int pos = h.getBindingAdapterPosition();
+            if (pos != RecyclerView.NO_POSITION && listener != null) {
+                listener.onSongClick(pos);
+            }
         });
 
         // Remove button
         h.removeBtn.setOnClickListener(v -> {
-            int pos = h.getAdapterPosition();
+            int pos = h.getBindingAdapterPosition();
             if (pos != RecyclerView.NO_POSITION && listener != null) {
-                songs.remove(pos);
-                notifyItemRemoved(pos);
-                notifyItemRangeChanged(pos, songs.size());
                 listener.onSongRemoved(pos);
             }
         });

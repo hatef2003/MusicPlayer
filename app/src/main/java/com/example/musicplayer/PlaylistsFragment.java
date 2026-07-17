@@ -10,6 +10,9 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
+
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
@@ -82,6 +85,27 @@ public class PlaylistsFragment extends Fragment implements PlaylistManager.OnPla
         // Import M3U button
         view.findViewById(R.id.importPlaylistFab).setOnClickListener(v -> {
             importLauncher.launch(new String[]{"audio/x-mpegurl", "audio/mpegurl"});
+        });
+
+        // Apply navigation bar insets to FABs so they're not hidden by OS keys
+        View createFab = view.findViewById(R.id.createPlaylistFab);
+        View importFab = view.findViewById(R.id.importPlaylistFab);
+        float density = getResources().getDisplayMetrics().density;
+        int createBaseMargin = (int) (20 * density);
+        int importBaseMargin = (int) (84 * density);
+        ViewCompat.setOnApplyWindowInsetsListener(createFab, (v, insets) -> {
+            int navBarHeight = insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom;
+            ViewGroup.MarginLayoutParams lp = (ViewGroup.MarginLayoutParams) v.getLayoutParams();
+            lp.bottomMargin = createBaseMargin + navBarHeight;
+            v.setLayoutParams(lp);
+            return insets;
+        });
+        ViewCompat.setOnApplyWindowInsetsListener(importFab, (v, insets) -> {
+            int navBarHeight = insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom;
+            ViewGroup.MarginLayoutParams lp = (ViewGroup.MarginLayoutParams) v.getLayoutParams();
+            lp.bottomMargin = importBaseMargin + navBarHeight;
+            v.setLayoutParams(lp);
+            return insets;
         });
 
         loadPlaylists();

@@ -12,6 +12,8 @@ public class SettingsManager {
     private static final String KEY_THEME = "theme";
     private static final String KEY_TRACKS_SORT = "tracks_sort";
     private static final String KEY_ACCENT_COLOR = "accent_color";
+    private static final String KEY_AUDD_API_KEY = "audd_api_key";
+
 
     public enum Theme {
         SYSTEM("system"),
@@ -52,6 +54,7 @@ public class SettingsManager {
             return TITLE;
         }
     }
+
 
     public enum AccentColor {
         GREEN("green", R.style.Theme_MusicPlayer_Green),
@@ -108,6 +111,16 @@ public class SettingsManager {
     public void setAccentColor(AccentColor accentColor) {
         prefs.edit().putString(KEY_ACCENT_COLOR, accentColor.value).apply();
     }
+
+    public String getAuddApiKey() {
+        return prefs.getString(KEY_AUDD_API_KEY, "");
+    }
+
+    public void setAuddApiKey(String key) {
+        prefs.edit().putString(KEY_AUDD_API_KEY, key).apply();
+    }
+
+
 
     public void applyTheme() {
         applyTheme(getTheme());

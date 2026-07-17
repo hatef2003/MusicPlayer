@@ -13,8 +13,10 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.musicplayer.model.Album;
+import com.example.musicplayer.model.Song;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
@@ -48,6 +50,34 @@ public class AlbumsFragment extends Fragment {
             intent.putExtra(AlbumDetailActivity.EXTRA_ALBUM_ARTIST, album.getArtist());
             startActivity(intent);
         });
+
+        adapter.setOnAlbumMenuListener(new AlbumAdapter.OnAlbumMenuListener() {
+            @Override
+            public void onPlayAll(Album album) {
+                List<Song> songs = album.getSongs();
+                if (!songs.isEmpty()) {
+                    PlaybackManager.getInstance(requireContext()).play(songs, 0);
+                }
+            }
+
+            @Override
+            public void onShufflePlay(Album album) {
+                List<Song> songs = new ArrayList<>(album.getSongs());
+                if (!songs.isEmpty()) {
+                    Collections.shuffle(songs);
+                    PlaybackManager.getInstance(requireContext()).play(songs, 0);
+                }
+            }
+
+            @Override
+            public void onGoToArtist(String artist) {
+                // Filter the main activity's tracks/albums by artist
+                if (getActivity() instanceof MainActivity) {
+                    ((MainActivity) getActivity()).searchByArtist(artist);
+                }
+            }
+        });
+
         recyclerView.setAdapter(adapter);
         loadAlbums();
         return view;
@@ -58,6 +88,25 @@ public class AlbumsFragment extends Fragment {
         allAlbums.clear();
         allAlbums.addAll(MusicRepository.loadAlbums(getContext()));
         applyFilter();
+        updatePlayingIndicator();
+    }
+
+    public void updatePlayingIndicator() {
+        if (adapter == null || getContext() == null) return;
+        PlaybackManager pm = PlaybackManager.getInstance(getContext());
+        Song current = pm.getCurrentSong();
+        if (current != null) {
+            // Find which album the current song belongs to
+            for (Album album : allAlbums) {
+                for (Song s : album.getSongs()) {
+                    if (s.getId() == current.getId()) {
+                        adapter.setPlayingAlbumId(album.getId());
+                        return;
+                    }
+                }
+            }
+        }
+        adapter.setPlayingAlbumId(-1);
     }
 
     public void setFilterQuery(String query) {

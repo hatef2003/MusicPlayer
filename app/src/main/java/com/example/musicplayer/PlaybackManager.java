@@ -105,11 +105,55 @@ public class PlaybackManager {
         return new ArrayList<>();
     }
 
-    public void moveQueueItem(int from, int to) {
-        if (musicService != null) musicService.moveQueueItem(from, to);
-    }
-
     public void playFromQueue(int index) {
         if (musicService != null) musicService.playFromQueue(index);
+    }
+
+    public void setQueueSilent(List<Song> songs, int newCurrentIndex) {
+        if (musicService != null) musicService.setQueueSilent(songs, newCurrentIndex);
+    }
+
+    public void removeFromQueue(int position) {
+        if (musicService != null) musicService.removeFromQueue(position);
+    }
+
+    public void toggleShuffle() {
+        if (musicService != null) musicService.toggleShuffle();
+    }
+
+    public void toggleRepeat() {
+        if (musicService != null) musicService.toggleRepeat();
+    }
+
+    public boolean isShuffleOn() {
+        return musicService != null && musicService.isShuffleOn();
+    }
+
+    public MusicService.RepeatMode getRepeatMode() {
+        return musicService != null ? musicService.getRepeatMode() : MusicService.RepeatMode.OFF;
+    }
+
+    /**
+     * Reload songs from MediaStore and update the queue entry for the current song.
+     * Call this after metadata (title/artist/album) has been updated externally.
+     */
+    public void refreshCurrentSong(Context context) {
+        if (musicService == null) return;
+        Song current = musicService.getCurrentSong();
+        if (current == null) return;
+        // Reload all songs and find the one with the same ID
+        List<Song> refreshed = MusicRepository.loadAllSongs(context);
+        for (Song s : refreshed) {
+            if (s.getId() == current.getId()) {
+                // Replace in the queue
+                List<Song> queue = musicService.getQueue();
+                int idx = musicService.getCurrentIndex();
+                if (idx >= 0 && idx < queue.size()) {
+                    queue.set(idx, s);
+                    musicService.setQueueSilent(queue, idx);
+                }
+                break;
+            }
+        }
     }
 }

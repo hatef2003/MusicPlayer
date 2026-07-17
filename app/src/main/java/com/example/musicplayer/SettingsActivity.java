@@ -1,7 +1,12 @@
 package com.example.musicplayer;
 
 import android.content.pm.PackageManager;
+import android.view.View;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
@@ -19,10 +24,12 @@ public class SettingsActivity extends BaseActivity {
 
         settingsManager = new SettingsManager(this);
 
-        if (getSupportActionBar() != null) {
-            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-            getSupportActionBar().setTitle(R.string.settings_title);
-        }
+        // Apply status bar inset to the root scroll view
+        applyStatusBarInset(findViewById(android.R.id.content));
+
+        // Back button
+        ImageView backBtn = findViewById(R.id.settingsBackBtn);
+        if (backBtn != null) backBtn.setOnClickListener(v -> finish());
 
         RadioGroup themeGroup = findViewById(R.id.themeGroup);
         RadioGroup sortGroup = findViewById(R.id.sortGroup);
@@ -69,12 +76,20 @@ public class SettingsActivity extends BaseActivity {
         });
 
         versionText.setText(getString(R.string.settings_version, getVersionName()));
-    }
 
-    @Override
-    public boolean onSupportNavigateUp() {
-        finish();
-        return true;
+        // AudD API key
+        EditText auddInput = findViewById(R.id.auddApiKeyInput);
+        String savedKey = settingsManager.getAuddApiKey();
+        if (!savedKey.isEmpty()) auddInput.setText(savedKey);
+        auddInput.addTextChangedListener(new TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
+            @Override public void onTextChanged(CharSequence s, int start, int before, int count) { }
+            @Override public void afterTextChanged(Editable s) {
+                settingsManager.setAuddApiKey(s.toString().trim());
+            }
+        });
+
+
     }
 
     private String getVersionName() {

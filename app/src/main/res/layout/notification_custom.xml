@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="#101010"
+    android:paddingStart="16dp"
+    android:paddingEnd="16dp"
+    android:paddingTop="10dp"
+    android:paddingBottom="12dp">
+
+    <!-- ═══ HEADER: minimal identity + format label ═══ -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingBottom="6dp">
+
+        <TextView
+            android:id="@+id/notifFormat"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="AUDIO"
+            android:textColor="#666666"
+            android:textSize="10sp"
+            android:fontFamily="monospace" />
+    </LinearLayout>
+
+    <!-- ═══ SONG INFO + ALBUM ART ═══ -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingTop="10dp"
+        android:paddingBottom="8dp">
+
+        <!-- Album art - 52dp, compact -->
+        <ImageView
+            android:id="@+id/notifAlbumArt"
+            android:layout_width="52dp"
+            android:layout_height="52dp"
+            android:scaleType="centerCrop"
+            android:background="#39FF6A"
+            android:padding="1dp" />
+
+        <!-- Song details -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:paddingStart="12dp">
+
+            <TextView
+                android:id="@+id/notifTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Music Player"
+                android:textColor="#39FF6A"
+                android:textSize="17sp"
+                android:fontFamily="monospace"
+                android:textStyle="bold"
+                android:maxLines="1"
+                android:ellipsize="end" />
+
+            <TextView
+                android:id="@+id/notifArtist"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text=""
+                android:textColor="#8A8A8A"
+                android:textSize="13sp"
+                android:fontFamily="monospace"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:layout_marginTop="2dp" />
+
+            <TextView
+                android:id="@+id/notifStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="PLAYING"
+                android:textColor="#39FF6A"
+                android:textSize="11sp"
+                android:fontFamily="monospace"
+                android:textStyle="bold"
+                android:layout_marginTop="2dp" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- ═══ PROGRESS BAR ═══ -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingBottom="6dp">
+
+        <TextView
+            android:id="@+id/notifCurrentTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0:00"
+            android:textColor="#8A8A8A"
+            android:textSize="11sp"
+            android:fontFamily="monospace" />
+
+        <ProgressBar
+            android:id="@+id/notifProgress"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="0dp"
+            android:layout_height="6dp"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:max="1000"
+            android:progress="0"
+            android:progressDrawable="@drawable/notif_progress_drawable"
+            android:indeterminate="false" />
+
+        <TextView
+            android:id="@+id/notifTotalTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0:00"
+            android:textColor="#8A8A8A"
+            android:textSize="11sp"
+            android:fontFamily="monospace" />
+    </LinearLayout>
+
+    <!-- ═══ PLAYBACK CONTROLS ═══ -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:paddingTop="4dp">
+
+        <ImageView
+            android:id="@+id/notifPrev"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:padding="10dp"
+            android:src="@drawable/ic_notif_prev_green"
+            android:contentDescription="Previous" />
+
+        <ImageView
+            android:id="@+id/notifPlayPause"
+            android:layout_width="52dp"
+            android:layout_height="52dp"
+            android:padding="12dp"
+            android:layout_marginStart="24dp"
+            android:layout_marginEnd="24dp"
+            android:src="@drawable/ic_notif_pause_green"
+            android:contentDescription="Play/Pause" />
+
+        <ImageView
+            android:id="@+id/notifNext"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:padding="10dp"
+            android:src="@drawable/ic_notif_next_green"
+            android:contentDescription="Next" />
+    </LinearLayout>
+
+</LinearLayout>
