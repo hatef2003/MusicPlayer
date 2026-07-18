@@ -42,6 +42,10 @@ public class PlaylistAdapter extends RecyclerView.Adapter<PlaylistAdapter.Playli
         notifyDataSetChanged();
     }
 
+    public List<Playlist> getPlaylists() {
+        return playlists;
+    }
+
     @NonNull
     @Override
     public PlaylistViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {

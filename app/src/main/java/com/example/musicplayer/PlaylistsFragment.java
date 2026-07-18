@@ -36,6 +36,7 @@ public class PlaylistsFragment extends Fragment implements PlaylistManager.OnPla
     private PlaylistAdapter adapter;
     private final List<Song> allSongs = new ArrayList<>();
     private TextView emptyView;
+    private FastScrollerView fastScroller;
     private PlaylistManager playlistManager;
 
     private final ActivityResultLauncher<String[]> importLauncher =
@@ -78,6 +79,22 @@ public class PlaylistsFragment extends Fragment implements PlaylistManager.OnPla
             }
         });
         recyclerView.setAdapter(adapter);
+
+        // ── Fast scroller ──
+        fastScroller = view.findViewById(R.id.fastScroller);
+        if (fastScroller != null) {
+            fastScroller.setSectionProvider(position -> {
+                List<Playlist> playlists = adapter.getPlaylists();
+                if (position >= 0 && position < playlists.size()) {
+                    String name = playlists.get(position).getName();
+                    if (name != null && !name.isEmpty()) {
+                        return name.substring(0, 1).toUpperCase();
+                    }
+                }
+                return "";
+            });
+            fastScroller.attachRecyclerView(recyclerView);
+        }
 
         // Create playlist button
         view.findViewById(R.id.createPlaylistFab).setOnClickListener(v -> showCreatePlaylistDialog());
@@ -122,6 +139,7 @@ public class PlaylistsFragment extends Fragment implements PlaylistManager.OnPla
         if (getContext() == null) return;
         List<Playlist> playlists = playlistManager.getAllPlaylists();
         adapter.setPlaylists(playlists);
+        if (fastScroller != null) fastScroller.refresh();
         if (emptyView != null) {
             emptyView.setVisibility(playlists.isEmpty() ? View.VISIBLE : View.GONE);
         }

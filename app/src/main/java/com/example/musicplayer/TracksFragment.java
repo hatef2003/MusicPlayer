@@ -27,6 +27,7 @@ public class TracksFragment extends Fragment {
     private final List<Song> filteredSongs = new ArrayList<>();
     private TextView emptyView;
     private TextView sortLabel;
+    private FastScrollerView fastScroller;
     private String currentQuery = "";
     private SettingsManager.TracksSort currentSort = SettingsManager.TracksSort.TITLE;
     private SettingsManager settingsManager;
@@ -55,6 +56,22 @@ public class TracksFragment extends Fragment {
             dialog.show(getParentFragmentManager(), "add_to_playlist");
         });
         recyclerView.setAdapter(adapter);
+
+        // ── Fast scroller (left-side scrollbar for quick navigation) ──
+        fastScroller = view.findViewById(R.id.fastScroller);
+        if (fastScroller != null) {
+            fastScroller.setVisibility(View.VISIBLE);
+            fastScroller.setSectionProvider(position -> {
+                if (position >= 0 && position < filteredSongs.size()) {
+                    String title = filteredSongs.get(position).getTitle();
+                    if (title != null && !title.isEmpty()) {
+                        return title.substring(0, 1).toUpperCase();
+                    }
+                }
+                return "";
+            });
+            fastScroller.attachRecyclerView(recyclerView);
+        }
 
         if (sortLabel != null) {
             sortLabel.setOnClickListener(v -> showSortDialog());
@@ -114,6 +131,7 @@ public class TracksFragment extends Fragment {
         filteredSongs.addAll(source);
         sortSongs(filteredSongs);
         if (adapter != null) adapter.notifyDataSetChanged();
+        if (fastScroller != null) fastScroller.refresh();
         if (emptyView != null) {
             if (filteredSongs.isEmpty()) {
                 emptyView.setText(currentQuery.isEmpty() ? getString(R.string.empty_tracks) : getString(R.string.empty_search));

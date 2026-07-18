@@ -26,6 +26,7 @@ public class AlbumsFragment extends Fragment {
     private final List<Album> allAlbums = new ArrayList<>();
     private final List<Album> filteredAlbums = new ArrayList<>();
     private TextView emptyView;
+    private FastScrollerView fastScroller;
     private String currentQuery = "";
 
     @Override
@@ -79,6 +80,23 @@ public class AlbumsFragment extends Fragment {
         });
 
         recyclerView.setAdapter(adapter);
+
+        // ── Fast scroller ──
+        fastScroller = view.findViewById(R.id.fastScroller);
+        if (fastScroller != null) {
+            fastScroller.setVisibility(View.VISIBLE);
+            fastScroller.setSectionProvider(position -> {
+                if (position >= 0 && position < filteredAlbums.size()) {
+                    String name = filteredAlbums.get(position).getName();
+                    if (name != null && !name.isEmpty()) {
+                        return name.substring(0, 1).toUpperCase();
+                    }
+                }
+                return "";
+            });
+            fastScroller.attachRecyclerView(recyclerView);
+        }
+
         loadAlbums();
         return view;
     }
@@ -127,6 +145,7 @@ public class AlbumsFragment extends Fragment {
             }
         }
         if (adapter != null) adapter.notifyDataSetChanged();
+        if (fastScroller != null) fastScroller.refresh();
         if (emptyView != null) {
             if (filteredAlbums.isEmpty()) {
                 emptyView.setText(currentQuery.isEmpty() ? getString(R.string.empty_albums) : getString(R.string.empty_search));

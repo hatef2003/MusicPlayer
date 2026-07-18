@@ -49,14 +49,30 @@
             android:layout_height="1dp"
             android:background="@color/terminal_dim" />
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/recyclerView"
+        <!-- RecyclerView + fast scroller wrapper -->
+        <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="1"
-            android:clipToPadding="false"
-            android:paddingTop="8dp"
-            android:paddingBottom="80dp" />
+            android:layout_weight="1">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:clipToPadding="false"
+                android:paddingTop="8dp"
+                android:paddingBottom="80dp"
+                android:paddingStart="20dp"
+                android:paddingEnd="0dp" />
+
+            <!-- Fast scroller (hidden by default; shown only in TracksFragment) -->
+            <com.example.musicplayer.FastScrollerView
+                android:id="@+id/fastScroller"
+                android:layout_width="56dp"
+                android:layout_height="match_parent"
+                android:layout_gravity="start"
+                android:visibility="gone" />
+        </FrameLayout>
 
     </LinearLayout>
 
