@@ -1,8 +1,13 @@
 package com.example.musicplayer;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.SeekBar;
 import android.widget.TextView;
 
 import androidx.annotation.Nullable;
@@ -26,6 +31,41 @@ public class AlbumDetailActivity extends BaseActivity {
     private final List<Song> songs = new ArrayList<>();
     private SongAdapter adapter;
 
+    // Mini player views
+    private LinearLayout miniPlayer;
+    private TextView miniTitle, miniArtist;
+    private ImageView miniPlayPause, miniAlbumArt;
+    private SeekBar miniSeekBar;
+    private boolean miniUserDragging = false;
+
+    // Mini player progress updater
+    private final Handler miniHandler = new Handler(Looper.getMainLooper());
+    private final Runnable miniProgressUpdater = new Runnable() {
+        @Override
+        public void run() {
+            PlaybackManager pm = PlaybackManager.getInstance(AlbumDetailActivity.this);
+            if (pm.isPlaying() && !miniUserDragging) {
+                int dur = pm.getDuration();
+                int pos = pm.getPosition();
+                if (dur > 0) {
+                    miniSeekBar.setMax(dur);
+                    miniSeekBar.setProgress(pos);
+                }
+            }
+            miniHandler.postDelayed(this, 500);
+        }
+    };
+
+    // Real-time playback callback — updates mini player + highlights the current song
+    private final PlaybackManager.Callback playbackCallback = (isPlaying, currentSong, position, duration) ->
+            runOnUiThread(() -> {
+                updateMiniPlayer(isPlaying, currentSong, position, duration);
+                // Update playing-song highlight in the album's song list
+                if (adapter != null) {
+                    adapter.setPlayingSongId(currentSong != null ? currentSong.getId() : -1);
+                }
+            });
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -47,6 +87,37 @@ public class AlbumDetailActivity extends BaseActivity {
         RecyclerView recyclerView = findViewById(R.id.detailRecyclerView);
 
         backBtn.setOnClickListener(v -> finish());
+
+        // ── Mini player views ──
+        miniPlayer = findViewById(R.id.detailMiniPlayer);
+        miniTitle = findViewById(R.id.detailMiniTitle);
+        miniArtist = findViewById(R.id.detailMiniArtist);
+        miniPlayPause = findViewById(R.id.detailMiniPlayPause);
+        miniAlbumArt = findViewById(R.id.detailMiniAlbumArt);
+        miniSeekBar = findViewById(R.id.detailMiniSeekBar);
+
+        // Apply navigation bar inset to the mini player so it isn't hidden by OS keys
+        applyNavigationBarInset(miniPlayer);
+
+        miniPlayPause.setOnClickListener(v -> {
+            PlaybackManager pm = PlaybackManager.getInstance(this);
+            if (pm.isPlaying()) pm.pause(); else pm.resume();
+        });
+
+        miniPlayer.setOnClickListener(v -> {
+            if (PlaybackManager.getInstance(this).getCurrentSong() != null) {
+                startActivity(new Intent(this, NowPlayingActivity.class));
+            }
+        });
+
+        miniSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override public void onProgressChanged(SeekBar sb, int progress, boolean fromUser) {}
+            @Override public void onStartTrackingTouch(SeekBar sb) { miniUserDragging = true; }
+            @Override public void onStopTrackingTouch(SeekBar sb) {
+                miniUserDragging = false;
+                PlaybackManager.getInstance(AlbumDetailActivity.this).seekTo(sb.getProgress());
+            }
+        });
 
         nameView.setText(albumName != null ? albumName : "Album");
         artistView.setText(albumArtist != null ? albumArtist : "");
@@ -93,6 +164,27 @@ public class AlbumDetailActivity extends BaseActivity {
         // Highlight currently playing song
         Song current = PlaybackManager.getInstance(this).getCurrentSong();
         if (current != null) adapter.setPlayingSongId(current.getId());
+
+        // Initial mini player state (if something is already playing elsewhere)
+        if (current != null) {
+            updateMiniPlayer(PlaybackManager.getInstance(this).isPlaying(), current,
+                    PlaybackManager.getInstance(this).getPosition(),
+                    PlaybackManager.getInstance(this).getDuration());
+        }
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        PlaybackManager pm = PlaybackManager.getInstance(this);
+        pm.bind();
+        pm.addCallback(playbackCallback);
+        miniHandler.post(miniProgressUpdater);
+        // Sync highlight with current playback when returning to this screen
+        Song current = pm.getCurrentSong();
+        if (adapter != null) {
+            adapter.setPlayingSongId(current != null ? current.getId() : -1);
+        }
     }
 
     @Override
@@ -100,5 +192,32 @@ public class AlbumDetailActivity extends BaseActivity {
         super.onResume();
         Song current = PlaybackManager.getInstance(this).getCurrentSong();
         if (current != null && adapter != null) adapter.setPlayingSongId(current.getId());
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        miniHandler.removeCallbacks(miniProgressUpdater);
+        PlaybackManager.getInstance(this).removeCallback(playbackCallback);
+    }
+
+    /** Update the mini player bar at the bottom of the album detail screen. */
+    private void updateMiniPlayer(boolean isPlaying, Song currentSong, int position, int duration) {
+        if (currentSong == null) {
+            miniPlayer.setVisibility(View.GONE);
+            return;
+        }
+        miniPlayer.setVisibility(View.VISIBLE);
+        miniTitle.setText(currentSong.getTitle());
+        miniArtist.setText(currentSong.getArtist());
+        miniPlayPause.setImageResource(isPlaying ? R.drawable.ic_pause : R.drawable.ic_play);
+        Glide.with(this)
+                .load(MusicRepository.getAlbumArtUri(currentSong.getAlbumId()))
+                .placeholder(R.drawable.ic_album).error(R.drawable.ic_album)
+                .centerCrop().into(miniAlbumArt);
+        if (duration > 0 && !miniUserDragging) {
+            miniSeekBar.setMax(duration);
+            miniSeekBar.setProgress(position);
+        }
     }
 }

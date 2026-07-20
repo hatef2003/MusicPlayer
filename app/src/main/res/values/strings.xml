@@ -33,4 +33,14 @@
     <string name="sort_date_added">Date Added</string>
     <string name="sort_label">Sort: %1$s</string>
     <string name="sort_dialog_title">Sort tracks by</string>
+
+    <!-- Playback settings -->
+    <string name="settings_playback">PLAYBACK</string>
+    <string name="settings_pause_on_focus">Pause on call / audio focus</string>
+    <string name="settings_pause_on_focus_desc">When on, music ducks during notifications and pauses/resumes for calls. When off, music keeps playing through ringing and notifications but still pauses when a call is answered and resumes afterwards.</string>
+    <string name="settings_pause_on_noisy">Pause on headphone disconnect</string>
+    <string name="settings_pause_on_noisy_desc">Pause music when headphones or Bluetooth audio are disconnected, so it does not suddenly play from the phone speaker. Turn off to keep playing on the new output.</string>
+
+    <!-- Widget -->
+    <string name="widget_description">Terminal-style music player controls for your home screen</string>
 </resources>

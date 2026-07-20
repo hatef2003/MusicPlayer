@@ -12,6 +12,7 @@ import android.widget.RadioGroup;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.widget.SwitchCompat;
 
 public class SettingsActivity extends BaseActivity {
 
@@ -88,6 +89,22 @@ public class SettingsActivity extends BaseActivity {
                 settingsManager.setAuddApiKey(s.toString().trim());
             }
         });
+
+        // Pause on call / audio focus toggle
+        SwitchCompat pauseOnFocusSwitch = findViewById(R.id.pauseOnFocusSwitch);
+        if (pauseOnFocusSwitch != null) {
+            pauseOnFocusSwitch.setChecked(settingsManager.shouldPauseOnFocusLoss());
+            pauseOnFocusSwitch.setOnCheckedChangeListener((button, isChecked) ->
+                    settingsManager.setPauseOnFocusLoss(isChecked));
+        }
+
+        // Pause on headphone disconnect toggle
+        SwitchCompat pauseOnNoisySwitch = findViewById(R.id.pauseOnNoisySwitch);
+        if (pauseOnNoisySwitch != null) {
+            pauseOnNoisySwitch.setChecked(settingsManager.shouldPauseOnBecomingNoisy());
+            pauseOnNoisySwitch.setOnCheckedChangeListener((button, isChecked) ->
+                    settingsManager.setPauseOnBecomingNoisy(isChecked));
+        }
 
 
     }

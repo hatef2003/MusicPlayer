@@ -13,6 +13,10 @@ public class SettingsManager {
     private static final String KEY_TRACKS_SORT = "tracks_sort";
     private static final String KEY_ACCENT_COLOR = "accent_color";
     private static final String KEY_AUDD_API_KEY = "audd_api_key";
+    /** When true (default), the player pauses on audio focus loss (e.g. call answered) and resumes on gain. */
+    private static final String KEY_PAUSE_ON_FOCUS_LOSS = "pause_on_focus_loss";
+    /** When true (default), the player pauses when headphones are disconnected (ACTION_AUDIO_BECOMING_NOISY). */
+    private static final String KEY_PAUSE_ON_BECOMING_NOISY = "pause_on_becoming_noisy";
 
 
     public enum Theme {
@@ -118,6 +122,32 @@ public class SettingsManager {
 
     public void setAuddApiKey(String key) {
         prefs.edit().putString(KEY_AUDD_API_KEY, key).apply();
+    }
+
+    /**
+     * Whether the player should pause when audio focus is lost (e.g. an incoming/answered
+     * call) and automatically resume when focus is regained.
+     * Defaults to true. When false, the player ignores audio focus changes entirely.
+     */
+    public boolean shouldPauseOnFocusLoss() {
+        return prefs.getBoolean(KEY_PAUSE_ON_FOCUS_LOSS, true);
+    }
+
+    public void setPauseOnFocusLoss(boolean enabled) {
+        prefs.edit().putBoolean(KEY_PAUSE_ON_FOCUS_LOSS, enabled).apply();
+    }
+
+    /**
+     * Whether the player should pause when headphones (or any audio output) are
+     * disconnected, so music doesn't suddenly blast from the phone speaker.
+     * Defaults to true. When false, playback continues on the new output.
+     */
+    public boolean shouldPauseOnBecomingNoisy() {
+        return prefs.getBoolean(KEY_PAUSE_ON_BECOMING_NOISY, true);
+    }
+
+    public void setPauseOnBecomingNoisy(boolean enabled) {
+        prefs.edit().putBoolean(KEY_PAUSE_ON_BECOMING_NOISY, enabled).apply();
     }
 
 

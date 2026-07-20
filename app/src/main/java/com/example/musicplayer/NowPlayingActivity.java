@@ -38,6 +38,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.example.musicplayer.model.Song;
 
+import android.util.LruCache;
+
 import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -87,6 +89,12 @@ public class NowPlayingActivity extends BaseActivity {
     private LinearLayout speechBtn;
     private TextView identifyBtn;
     private final ExecutorService networkExecutor = Executors.newSingleThreadExecutor();
+    /** Dedicated background executor for MediaMetadataRetriever I/O (never blocks the UI thread). */
+    private final ExecutorService metadataExecutor = Executors.newSingleThreadExecutor();
+    /** Cache of format labels (e.g. "MP3 • 320kbps • 44kHz") keyed by songId to avoid repeated MMR I/O. */
+    private final LruCache<Long, String> formatLabelCache = new LruCache<>(64);
+    /** Cache of technical metadata blocks keyed by songId (Info tab). */
+    private final LruCache<Long, String> techMetadataCache = new LruCache<>(64);
 
     // Playback controls
     private ImageView playPauseBtn, prevBtn, nextBtn, shuffleBtn, repeatBtn;
@@ -380,6 +388,7 @@ public class NowPlayingActivity extends BaseActivity {
             infoContent.setText("// no song playing");
             return;
         }
+        // Show basic info (from the Song object — no I/O) immediately
         StringBuilder sb = new StringBuilder();
         sb.append("Title:     ").append(currentSong.getTitle()).append("\n");
         sb.append("Artist:    ").append(currentSong.getArtist()).append("\n");
@@ -387,26 +396,73 @@ public class NowPlayingActivity extends BaseActivity {
         sb.append("Duration:  ").append(currentSong.getDurationLabel()).append("\n");
         sb.append("ID:        ").append(currentSong.getId()).append("\n");
         sb.append("URI:       ").append(currentSong.getContentUri()).append("\n\n");
-
-        // Try to get technical metadata
-        try {
-            MediaMetadataRetriever mmr = new MediaMetadataRetriever();
-            mmr.setDataSource(this, currentSong.getContentUri());
-            String mime = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_MIMETYPE);
-            String bitrate = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_BITRATE);
-            String sampleRate = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_SAMPLERATE);
-            String channels = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_NUM_TRACKS);
-
-            sb.append("// technical metadata\n");
-            if (mime != null) sb.append("Format:    ").append(mime).append("\n");
-            if (bitrate != null) sb.append("Bitrate:   ").append(Integer.parseInt(bitrate) / 1000).append(" kbps\n");
-            if (sampleRate != null) sb.append("Sample:    ").append(sampleRate).append(" Hz\n");
-            if (channels != null) sb.append("Channels:  ").append(channels).append("\n");
-            mmr.release();
-        } catch (NumberFormatException | SecurityException | java.io.IOException e) {
-            sb.append("// metadata unavailable\n");
-        }
+        sb.append("// loading technical metadata...\n");
         infoContent.setText(sb.toString());
+
+        // Extract technical metadata on a background thread (was on main thread → jank/ANR)
+        loadTechnicalMetadataAsync(currentSong);
+    }
+
+    /** Extract technical metadata (format/bitrate/sample rate/channels) off-thread. */
+    private void loadTechnicalMetadataAsync(Song song) {
+        final long songId = song.getId();
+        final Uri uri = song.getContentUri();
+        // Serve from cache if available (avoids repeated MMR I/O when switching to the Info tab)
+        String cachedBlock = techMetadataCache.get(songId);
+        if (cachedBlock != null) {
+            renderTechMetadata(songId, cachedBlock);
+            return;
+        }
+        metadataExecutor.execute(() -> {
+            String techBlock;
+            MediaMetadataRetriever mmr = new MediaMetadataRetriever();
+            try {
+                mmr.setDataSource(this, uri);
+                String mime = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_MIMETYPE);
+                String bitrate = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_BITRATE);
+                String sampleRate = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_SAMPLERATE);
+                String channels = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_NUM_TRACKS);
+
+                StringBuilder tb = new StringBuilder();
+                tb.append("// technical metadata\n");
+                if (mime != null) tb.append("Format:    ").append(mime).append("\n");
+                if (bitrate != null) {
+                    try { tb.append("Bitrate:   ").append(Integer.parseInt(bitrate) / 1000).append(" kbps\n"); }
+                    catch (NumberFormatException ignored) {}
+                }
+                if (sampleRate != null) tb.append("Sample:    ").append(sampleRate).append(" Hz\n");
+                if (channels != null) tb.append("Channels:  ").append(channels).append("\n");
+                techBlock = tb.toString();
+            } catch (Exception e) {
+                techBlock = "// metadata unavailable\n";
+            } finally {
+                try { mmr.release(); } catch (Exception ignored) {}
+            }
+            techMetadataCache.put(songId, techBlock);
+            // Copy to an effectively-final variable so it can be captured by the lambda.
+            final String block = techBlock;
+            runOnUiThread(() -> {
+                if (isFinishing() || isDestroyed()) return;
+                renderTechMetadata(songId, block);
+            });
+        });
+    }
+
+    /** Render the technical metadata block into infoContent (only if still relevant). */
+    private void renderTechMetadata(long songId, String block) {
+        Song cs = currentSong;
+        // Only update if we're still on the same song AND the Info tab is visible
+        if (cs != null && cs.getId() == songId && currentTab == 1) {
+            StringBuilder sb = new StringBuilder();
+            sb.append("Title:     ").append(cs.getTitle()).append("\n");
+            sb.append("Artist:    ").append(cs.getArtist()).append("\n");
+            sb.append("Album:     ").append(cs.getAlbum()).append("\n");
+            sb.append("Duration:  ").append(cs.getDurationLabel()).append("\n");
+            sb.append("ID:        ").append(cs.getId()).append("\n");
+            sb.append("URI:       ").append(cs.getContentUri()).append("\n\n");
+            sb.append(block);
+            infoContent.setText(sb.toString());
+        }
     }
 
     private void showQueueInfo() {
@@ -424,9 +480,8 @@ public class NowPlayingActivity extends BaseActivity {
         hackerStatus.setText(isPlaying ? "PLAYING" : "PAUSED");
         loadAlbumArt(song);
 
-        // Build metadata line
-        String format = getFormatLabel(song);
-        metaView.setText(format);
+        // Build metadata line (async to avoid main-thread MediaMetadataRetriever I/O)
+        loadFormatLabelAsync(song);
 
         if (duration > 0 && !userDragging) {
             seekBar.setMax(duration); seekBar.setProgress(position);
@@ -447,32 +502,73 @@ public class NowPlayingActivity extends BaseActivity {
         }
     }
 
-    private String getFormatLabel(Song song) {
+    /**
+     * Show the cached format label immediately if available; otherwise show a
+     * placeholder and extract the metadata on a background thread, then update
+     * {@code metaView} when done (only if the current song hasn't changed).
+     *
+     * This replaces the old synchronous getFormatLabel() that called
+     * MediaMetadataRetriever.setDataSource()/extractMetadata() on the main
+     * thread on every playback callback (causing jank/ANRs for large files).
+     */
+    private void loadFormatLabelAsync(Song song) {
+        String cached = formatLabelCache.get(song.getId());
+        if (cached != null) {
+            metaView.setText(cached);
+            return;
+        }
+        // Placeholder while we extract metadata off-thread
+        metaView.setText("AUDIO");
+        final long songId = song.getId();
+        final Uri uri = song.getContentUri();
+        metadataExecutor.execute(() -> {
+            String label = extractFormatLabel(uri);
+            formatLabelCache.put(songId, label);
+            runOnUiThread(() -> {
+                if (isFinishing() || isDestroyed()) return;
+                Song cs = currentSong;
+                if (cs != null && cs.getId() == songId) {
+                    metaView.setText(label);
+                }
+            });
+        });
+    }
+
+
+    /** Extract the format label (e.g. "MP3 • 320kbps • 44kHz") on a background thread. */
+    private String extractFormatLabel(Uri uri) {
+        MediaMetadataRetriever mmr = new MediaMetadataRetriever();
         try {
-            MediaMetadataRetriever mmr = new MediaMetadataRetriever();
-            mmr.setDataSource(this, song.getContentUri());
+            mmr.setDataSource(this, uri);
             String mime = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_MIMETYPE);
             String bitrate = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_BITRATE);
             String sampleRate = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_SAMPLERATE);
-            mmr.release();
+            return buildFormatLabel(mime, bitrate, sampleRate);
+        } catch (Exception e) {
+            return "AUDIO";
+        } finally {
+            try { mmr.release(); } catch (Exception ignored) {}
+        }
+    }
 
-            StringBuilder sb = new StringBuilder();
-            if (mime != null) {
-                if (mime.contains("mp3") || mime.contains("mpeg")) sb.append("MP3");
-                else if (mime.contains("flac")) sb.append("FLAC");
-                else if (mime.contains("ogg")) sb.append("OGG");
-                else if (mime.contains("aac") || mime.contains("mp4")) sb.append("AAC");
-                else if (mime.contains("wav")) sb.append("WAV");
-                else sb.append(mime.substring(mime.lastIndexOf('/') + 1).toUpperCase());
-            } else {
-                sb.append("AUDIO");
-            }
+    /** Pure helper that builds the display string from already-extracted metadata. */
+    private String buildFormatLabel(String mime, String bitrate, String sampleRate) {
+        StringBuilder sb = new StringBuilder();
+        if (mime != null) {
+            if (mime.contains("mp3") || mime.contains("mpeg")) sb.append("MP3");
+            else if (mime.contains("flac")) sb.append("FLAC");
+            else if (mime.contains("ogg")) sb.append("OGG");
+            else if (mime.contains("aac") || mime.contains("mp4")) sb.append("AAC");
+            else if (mime.contains("wav")) sb.append("WAV");
+            else sb.append(mime.substring(mime.lastIndexOf('/') + 1).toUpperCase());
+        } else {
+            sb.append("AUDIO");
+        }
+        try {
             if (bitrate != null) sb.append(" • ").append(Integer.parseInt(bitrate) / 1000).append("kbps");
             if (sampleRate != null) sb.append(" • ").append(Integer.parseInt(sampleRate) / 1000).append("kHz");
-            return sb.toString();
-        } catch (NumberFormatException | SecurityException | java.io.IOException e) {
-            return "AUDIO";
-        }
+        } catch (NumberFormatException ignored) {}
+        return sb.toString();
     }
 
     // ═══ LYRICS ═══
@@ -913,5 +1009,6 @@ public class NowPlayingActivity extends BaseActivity {
     @Override protected void onDestroy() {
         super.onDestroy();
         networkExecutor.shutdownNow();
+        metadataExecutor.shutdownNow();
     }
 }

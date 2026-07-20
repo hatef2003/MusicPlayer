@@ -151,7 +151,8 @@
     <!-- Song list -->
     <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="0dp"
+        android:layout_weight="1">
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/detailRecyclerView"
@@ -172,5 +173,108 @@
             android:textSize="14sp"
             android:visibility="gone" />
     </FrameLayout>
+
+    <!-- ═══ MINI PLAYER ═══ -->
+    <LinearLayout
+        android:id="@+id/detailMiniPlayer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="@color/md_surface"
+        android:elevation="4dp"
+        android:visibility="gone"
+        tools:visibility="visible">
+
+        <!-- Progress bar (thin, at top of mini player) -->
+        <SeekBar
+            android:id="@+id/detailMiniSeekBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:maxHeight="2dp"
+            android:minHeight="2dp"
+            android:progressTint="@color/terminal_green"
+            android:thumbTint="@color/terminal_green"
+            android:thumb="@android:color/transparent" />
+
+        <!-- Content row -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:padding="12dp">
+
+            <!-- Album art -->
+            <ImageView
+                android:id="@+id/detailMiniAlbumArt"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:src="@drawable/ic_album"
+                android:scaleType="centerCrop"
+                android:contentDescription="Album art" />
+
+            <!-- Green separator -->
+            <View
+                android:layout_width="2dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="10dp"
+                android:layout_marginEnd="10dp"
+                android:background="@color/terminal_green" />
+
+            <!-- Song info -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:paddingEnd="8dp">
+
+                <TextView
+                    android:id="@+id/detailMiniPlayingLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="monospace"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="9sp"
+                    android:text="PLAYING"
+                    android:letterSpacing="0.1" />
+
+                <TextView
+                    android:id="@+id/detailMiniTitle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="monospace"
+                    android:textColor="@color/terminal_green"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:singleLine="true"
+                    android:ellipsize="end"
+                    android:layout_marginTop="1dp"
+                    tools:text="From the Inside" />
+
+                <TextView
+                    android:id="@+id/detailMiniArtist"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="monospace"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="11sp"
+                    android:singleLine="true"
+                    android:ellipsize="end"
+                    tools:text="Linkin Park" />
+            </LinearLayout>
+
+            <!-- Play/Pause -->
+            <ImageView
+                android:id="@+id/detailMiniPlayPause"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:padding="10dp"
+                android:src="@drawable/ic_play"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Play/Pause"
+                app:tint="@color/terminal_green" />
+        </LinearLayout>
+    </LinearLayout>
 
 </LinearLayout>
