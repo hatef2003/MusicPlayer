@@ -76,6 +76,11 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
     private List<Song> originalQueue = new ArrayList<>();
     private int currentIndex = -1;
     private boolean isPrepared = false;
+    private volatile boolean isPreparing = false;
+    private int pendingSeekOnPrepared = 0;
+    private boolean playOnPrepare = true;
+    private long prepareGeneration = 0;
+    private volatile long currentPrepareGeneration = 0;
     private boolean shuffleOn = false;
     private RepeatMode repeatMode = RepeatMode.OFF;
     private final Random random = new Random();
@@ -141,20 +146,26 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
                 // If the queue is empty, the service was likely killed and
                 // restarted by a media-button / Bluetooth / system media control
                 // press. Restore the last saved queue + position before resuming.
-                if (queue.isEmpty() && !restorePlaybackState()) {
-                    Log.w(TAG, "onPlay: nothing to restore — ignoring");
-                    return;
+                if (queue.isEmpty()) {
+                    restorePlaybackState(MusicService.this::resume);
+                } else {
+                    resume();
                 }
-                resume();
             }
             @Override public void onPause() { pause(); }
             @Override public void onSkipToNext() {
-                if (queue.isEmpty() && !restorePlaybackState()) return;
-                next();
+                if (queue.isEmpty()) {
+                    restorePlaybackState(MusicService.this::next);
+                } else {
+                    next();
+                }
             }
             @Override public void onSkipToPrevious() {
-                if (queue.isEmpty() && !restorePlaybackState()) return;
-                prev();
+                if (queue.isEmpty()) {
+                    restorePlaybackState(MusicService.this::prev);
+                } else {
+                    prev();
+                }
             }
             @Override public void onStop() { pause(); }
             @Override public void onSeekTo(long pos) { seekTo((int) pos); }
@@ -209,25 +220,76 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
         }
         Song song = queue.get(currentIndex);
         try {
+            // Cancel any ongoing async preparation before starting a new track.
+            if (isPreparing) {
+                mediaPlayer.reset();
+            }
             isPrepared = false;
-            mediaPlayer.reset();
-            mediaPlayer.setDataSource(getApplicationContext(), song.getContentUri());
-            mediaPlayer.prepare();
-            isPrepared = true;
-            mediaPlayer.start();
+            isPreparing = true;
+            playOnPrepare = true;
             currentArtBitmap = null;
+            long generation = ++prepareGeneration;
+            currentPrepareGeneration = generation;
+
+            mediaPlayer.reset();
+            mediaPlayer.setOnPreparedListener(mp -> onPrepared(generation));
+            mediaPlayer.setOnErrorListener((mp, what, extra) -> onPlayerError(generation, what, extra));
+            mediaPlayer.setDataSource(getApplicationContext(), song.getContentUri());
+            mediaPlayer.prepareAsync();
 
             updateMediaMetadata(song);
-            startForegroundCompat(buildNotification(true));
-            notifyStateChanged(true);
-            loadAlbumArtAsync(song);
+            loadAlbumArtAsync(song, generation);
         } catch (Exception e) {
             Log.e(TAG, "playCurrent failed", e);
+            isPreparing = false;
+            isPrepared = false;
         }
     }
 
+    /** Called when {@link MediaPlayer} finishes async preparation. */
+    private void onPrepared(long generation) {
+        if (generation != currentPrepareGeneration) {
+            // Stale callback from a cancelled/previous preparation — ignore it.
+            return;
+        }
+        isPrepared = true;
+        isPreparing = false;
+
+        if (pendingSeekOnPrepared > 0) {
+            mediaPlayer.seekTo(pendingSeekOnPrepared);
+            pendingSeekOnPrepared = 0;
+        }
+
+        if (playOnPrepare) {
+            mediaPlayer.start();
+            startForegroundCompat(buildNotification(true));
+            notifyStateChanged(true);
+        } else {
+            NotificationManager nm = getSystemService(NotificationManager.class);
+            if (nm != null) nm.notify(NOTIFICATION_ID, buildNotification(false));
+            notifyStateChanged(false);
+        }
+    }
+
+    /** Called when {@link MediaPlayer} encounters an error. */
+    private boolean onPlayerError(long generation, int what, int extra) {
+        if (generation != currentPrepareGeneration) {
+            // Stale error from a cancelled/previous preparation — ignore it.
+            return true;
+        }
+        Log.e(TAG, "MediaPlayer error: what=" + what + " extra=" + extra);
+        isPrepared = false;
+        isPreparing = false;
+        mediaPlayer.reset();
+        notifyStateChanged(false);
+        return true;
+    }
+
     public void pause() {
-        if (isPrepared && mediaPlayer.isPlaying()) {
+        if (isPreparing) {
+            playOnPrepare = false;
+            notifyStateChanged(false);
+        } else if (isPrepared && mediaPlayer.isPlaying()) {
             mediaPlayer.pause();
             stopForeground(false);
             NotificationManager nm = getSystemService(NotificationManager.class);
@@ -237,7 +299,10 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
     }
 
     public void resume() {
-        if (isPrepared && !mediaPlayer.isPlaying()) {
+        if (isPreparing) {
+            playOnPrepare = true;
+            notifyStateChanged(true);
+        } else if (isPrepared && !mediaPlayer.isPlaying()) {
             if (!requestAudioFocus()) {
                 Log.w(TAG, "Could not regain audio focus");
                 return;
@@ -312,7 +377,11 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
     public RepeatMode getRepeatMode() { return repeatMode; }
 
     public void seekTo(int msec) {
-        if (isPrepared) mediaPlayer.seekTo(msec);
+        if (isPreparing) {
+            pendingSeekOnPrepared = msec;
+        } else if (isPrepared) {
+            mediaPlayer.seekTo(msec);
+        }
     }
 
     public boolean isPlaying() {
@@ -436,71 +505,76 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
     /**
      * Rebuild the queue from the last saved state, fetch fresh {@link Song}
      * objects from the MediaStore by ID, and start playback at the saved
-     * position. Returns {@code true} if a queue was restored and playback
-     * started, {@code false} if there was no saved state or it was invalid.
+     * position. Runs asynchronously to avoid blocking the main thread.
      *
      * <p>Called from the MediaSession {@code onPlay()} callback and the
      * {@link #ACTION_RESUME}/{@link #ACTION_NEXT}/{@link #ACTION_PREV} intents
      * when the queue is empty — i.e. the service was killed and restarted by a
      * media-button / Bluetooth / system media control press.</p>
      */
-    private boolean restorePlaybackState() {
+    private void restorePlaybackState(Runnable onRestored) {
         String json = getSharedPreferences(STATE_PREFS, MODE_PRIVATE)
                 .getString("state", null);
-        if (json == null) return false;
-        try {
-            JSONObject state = new JSONObject(json);
-            JSONArray idArray = state.getJSONArray("ids");
-            int savedIndex = state.optInt("currentIndex", -1);
-            int savedPos = state.optInt("position", 0);
-            boolean savedShuffle = state.optBoolean("shuffle", false);
-            String repeatName = state.optString("repeat", RepeatMode.OFF.name());
+        if (json == null) {
+            if (onRestored != null) onRestored.run();
+            return;
+        }
+        MusicRepository.loadAllSongsAsync(this, catalog -> {
+            try {
+                JSONObject state = new JSONObject(json);
+                JSONArray idArray = state.getJSONArray("ids");
+                int savedIndex = state.optInt("currentIndex", -1);
+                int savedPos = state.optInt("position", 0);
+                boolean savedShuffle = state.optBoolean("shuffle", false);
+                String repeatName = state.optString("repeat", RepeatMode.OFF.name());
 
-            // Look up each saved ID in the current MediaStore catalog and rebuild
-            // the queue with fresh Song objects (content URIs, metadata, etc.).
-            // Songs that no longer exist are skipped (index adjusted below).
-            List<Song> catalog = MusicRepository.loadAllSongs(this);
-            List<Song> restored = new ArrayList<>();
-            int newCurrentIndex = -1;
-            long targetSongId = -1L;
-            if (savedIndex >= 0 && savedIndex < idArray.length()) {
-                targetSongId = idArray.getLong(savedIndex);
-            }
-            for (int i = 0; i < idArray.length(); i++) {
-                long id = idArray.getLong(i);
-                for (Song s : catalog) {
-                    if (s.getId() == id) {
-                        restored.add(s);
-                        if (id == targetSongId) newCurrentIndex = restored.size() - 1;
-                        break;
+                // Look up each saved ID in the current MediaStore catalog and rebuild
+                // the queue with fresh Song objects (content URIs, metadata, etc.).
+                // Songs that no longer exist are skipped (index adjusted below).
+                List<Song> restored = new ArrayList<>();
+                int newCurrentIndex = -1;
+                long targetSongId = -1L;
+                if (savedIndex >= 0 && savedIndex < idArray.length()) {
+                    targetSongId = idArray.getLong(savedIndex);
+                }
+                for (int i = 0; i < idArray.length(); i++) {
+                    long id = idArray.getLong(i);
+                    for (Song s : catalog) {
+                        if (s.getId() == id) {
+                            restored.add(s);
+                            if (id == targetSongId) newCurrentIndex = restored.size() - 1;
+                            break;
+                        }
                     }
                 }
-            }
-            if (restored.isEmpty() || newCurrentIndex < 0) {
-                Log.w(TAG, "restorePlaybackState: saved queue no longer resolvable");
-                clearPlaybackState();
-                return false;
-            }
-            this.queue = restored;
-            this.originalQueue = new ArrayList<>(restored);
-            this.currentIndex = newCurrentIndex;
-            this.shuffleOn = savedShuffle;
-            try { this.repeatMode = RepeatMode.valueOf(repeatName); }
-            catch (Exception ignored) { this.repeatMode = RepeatMode.OFF; }
+                if (restored.isEmpty() || newCurrentIndex < 0) {
+                    Log.w(TAG, "restorePlaybackState: saved queue no longer resolvable");
+                    clearPlaybackState();
+                    if (onRestored != null) onRestored.run();
+                    return;
+                }
+                this.queue = restored;
+                this.originalQueue = new ArrayList<>(restored);
+                this.currentIndex = newCurrentIndex;
+                this.shuffleOn = savedShuffle;
+                try { this.repeatMode = RepeatMode.valueOf(repeatName); }
+                catch (Exception ignored) { this.repeatMode = RepeatMode.OFF; }
 
-            // Start playback and seek to the saved position once prepared.
-            playCurrent();
-            if (savedPos > 0 && isPrepared) {
-                mediaPlayer.seekTo(savedPos);
+                // Start playback; deferred seek is handled by pendingSeekOnPrepared
+                // once the async prepare completes.
+                if (savedPos > 0) {
+                    pendingSeekOnPrepared = savedPos;
+                }
+                playCurrent();
+                Log.i(TAG, "restorePlaybackState: restored " + restored.size()
+                        + " tracks at index " + newCurrentIndex + ", pos " + savedPos);
+            } catch (Exception e) {
+                Log.w(TAG, "restorePlaybackState failed", e);
+                clearPlaybackState();
+            } finally {
+                if (onRestored != null) onRestored.run();
             }
-            Log.i(TAG, "restorePlaybackState: restored " + restored.size()
-                    + " tracks at index " + newCurrentIndex + ", pos " + savedPos);
-            return true;
-        } catch (Exception e) {
-            Log.w(TAG, "restorePlaybackState failed", e);
-            clearPlaybackState();
-            return false;
-        }
+        });
     }
 
     /**
@@ -582,19 +656,25 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
                     // Notification play button / system media control. If the
                     // queue is empty, the service was killed and restarted —
                     // restore the last saved queue + position first.
-                    if (queue.isEmpty() && !restorePlaybackState()) {
-                        Log.w(TAG, "ACTION_RESUME: nothing to restore");
-                        break;
+                    if (queue.isEmpty()) {
+                        restorePlaybackState(MusicService.this::resume);
+                    } else {
+                        resume();
                     }
-                    resume();
                     break;
                 case ACTION_NEXT:
-                    if (queue.isEmpty() && !restorePlaybackState()) break;
-                    next();
+                    if (queue.isEmpty()) {
+                        restorePlaybackState(MusicService.this::next);
+                    } else {
+                        next();
+                    }
                     break;
                 case ACTION_PREV:
-                    if (queue.isEmpty() && !restorePlaybackState()) break;
-                    prev();
+                    if (queue.isEmpty()) {
+                        restorePlaybackState(MusicService.this::prev);
+                    } else {
+                        prev();
+                    }
                     break;
                 case ACTION_STOP:
                     clearPlaybackState();
@@ -796,7 +876,7 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
         mediaSession.setMetadata(mb.build());
     }
 
-    private void loadAlbumArtAsync(Song song) {
+    private void loadAlbumArtAsync(Song song, long generation) {
         artExecutor.execute(() -> {
             // Load album art
             Bitmap bitmap = null;
@@ -809,12 +889,14 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
             } catch (Exception e) {
                 Log.d(TAG, "No album art for: " + song.getTitle());
             }
-            currentArtBitmap = bitmap;
 
-            // Single notification refresh with both format + art
-            updateMediaMetadata(song);
             final Bitmap artBitmap = bitmap;
             mainHandler.post(() -> {
+                // Ignore stale art loads from a previous/preparation generation.
+                if (generation != currentPrepareGeneration) return;
+                currentArtBitmap = artBitmap;
+                // Refresh MediaSession metadata with the loaded art, then rebuild notification.
+                updateMediaMetadata(song);
                 NotificationManager nm = getSystemService(NotificationManager.class);
                 if (nm != null) nm.notify(NOTIFICATION_ID, buildNotification(isPlaying()));
                 // Push updated album art to widget

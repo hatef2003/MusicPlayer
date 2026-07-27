@@ -155,9 +155,13 @@ public class PlaylistDetailActivity extends BaseActivity {
                     .show(anchor);
         });
 
-        // Load all songs from device
-        allSongs.addAll(MusicRepository.loadAllSongs(this));
-        loadPlaylistSongs();
+        // Load all songs from device off the main thread
+        MusicRepository.loadAllSongsAsync(this, loaded -> {
+            if (isFinishing() || isDestroyed()) return;
+            allSongs.clear();
+            allSongs.addAll(loaded);
+            loadPlaylistSongs();
+        });
     }
 
     @Override

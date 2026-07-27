@@ -173,40 +173,47 @@ public class AlbumDetailActivity extends BaseActivity {
                     .show(anchor);
         });
 
-        // Load album songs
-        Album loadedAlbum = null;
-        List<Album> albums = MusicRepository.loadAlbums(this);
-        for (Album a : albums) {
-            if (a.getId() == albumId) {
-                loadedAlbum = a;
-                songs.addAll(a.getSongs());
-                break;
+        // Load album songs off the main thread. Use a weak reference so the
+        // activity can be GC'd if it is destroyed before the callback runs.
+        java.lang.ref.WeakReference<AlbumDetailActivity> ref =
+                new java.lang.ref.WeakReference<>(this);
+        MusicRepository.loadAlbumsAsync(getApplicationContext(), albums -> {
+            AlbumDetailActivity activity = ref.get();
+            if (activity == null || activity.isFinishing() || activity.isDestroyed()) return;
+            Album loadedAlbum = null;
+            for (Album a : albums) {
+                if (a.getId() == albumId) {
+                    loadedAlbum = a;
+                    activity.songs.addAll(a.getSongs());
+                    break;
+                }
             }
-        }
-        adapter.notifyDataSetChanged();
+            activity.adapter.notifyDataSetChanged();
 
-        // Show track count + duration
-        if (loadedAlbum != null) {
-            int count = loadedAlbum.getSongCount();
-            int totalMin = (int) (loadedAlbum.getTotalDuration() / 60000);
-            metaView.setText(String.format(Locale.US, "%d tracks \u2022 %d min", count, totalMin));
-        }
+            // Show track count + duration
+            if (loadedAlbum != null) {
+                int count = loadedAlbum.getSongCount();
+                int totalMin = (int) (loadedAlbum.getTotalDuration() / 60000);
+                metaView.setText(String.format(Locale.US, "%d tracks \u2022 %d min", count, totalMin));
+            }
 
-        if (songs.isEmpty()) {
-            emptyView.setVisibility(View.VISIBLE);
-            emptyView.setText("// no songs in album");
-        }
+            if (activity.songs.isEmpty()) {
+                emptyView.setVisibility(View.VISIBLE);
+                emptyView.setText("// no songs in album");
+            }
 
-        // Highlight currently playing song
-        Song current = PlaybackManager.getInstance(this).getCurrentSong();
-        if (current != null) adapter.setPlayingSongId(current.getId());
+            // Highlight currently playing song
+            Song current = PlaybackManager.getInstance(activity).getCurrentSong();
+            if (current != null) activity.adapter.setPlayingSongId(current.getId());
 
-        // Initial mini player state (if something is already playing elsewhere)
-        if (current != null) {
-            updateMiniPlayer(PlaybackManager.getInstance(this).isPlaying(), current,
-                    PlaybackManager.getInstance(this).getPosition(),
-                    PlaybackManager.getInstance(this).getDuration());
-        }
+            // Initial mini player state (if something is already playing elsewhere)
+            if (current != null) {
+                activity.updateMiniPlayer(PlaybackManager.getInstance(activity).isPlaying(), current,
+                        PlaybackManager.getInstance(activity).getPosition(),
+                        PlaybackManager.getInstance(activity).getDuration());
+            }
+        });
+
     }
 
     @Override

@@ -4,6 +4,8 @@ import android.content.ContentUris;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Handler;
+import android.os.Looper;
 import android.provider.MediaStore;
 
 import com.example.musicplayer.model.Album;
@@ -13,8 +15,18 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class MusicRepository {
+
+    /** Callback for async repository operations. */
+    public interface Callback<T> {
+        void onResult(T result);
+    }
+
+    private static final ExecutorService executor = Executors.newSingleThreadExecutor();
+    private static final Handler mainHandler = new Handler(Looper.getMainLooper());
 
     public static List<Song> loadAllSongs(Context context) {
         List<Song> songs = new ArrayList<>();
@@ -58,8 +70,38 @@ public class MusicRepository {
         return songs;
     }
 
+    /**
+     * Load all songs asynchronously. The result is delivered on the main thread.
+     * Prefer this from UI entry points to avoid blocking the main thread.
+     */
+    public static void loadAllSongsAsync(Context context, Callback<List<Song>> callback) {
+        executor.execute(() -> {
+            List<Song> result = loadAllSongs(context);
+            mainHandler.post(() -> callback.onResult(result));
+        });
+    }
+
+    /**
+     * Load albums asynchronously. The result is delivered on the main thread.
+     */
+    public static void loadAlbumsAsync(Context context, Callback<List<Album>> callback) {
+        executor.execute(() -> {
+            List<Album> result = loadAlbums(context);
+            mainHandler.post(() -> callback.onResult(result));
+        });
+    }
+
+    /** Shutdown the repository executor. Call once, e.g. from Application.onTerminate(). */
+    public static void shutdown() {
+        executor.shutdown();
+    }
+
     public static List<Album> loadAlbums(Context context) {
         List<Song> songs = loadAllSongs(context);
+        return buildAlbums(songs);
+    }
+
+    public static List<Album> buildAlbums(List<Song> songs) {
         // Preserve insertion order; first artist seen wins.
         Map<Long, Album> albumMap = new LinkedHashMap<>();
         for (Song s : songs) {

@@ -117,7 +117,8 @@ public class TracksFragment extends Fragment {
             sortLabel.setOnClickListener(v -> showSortDialog());
         }
 
-        loadSongs();
+        // Defer loading to onResume so the activity can also pass data
+        // without triggering a redundant MediaStore query.
         return view;
     }
 
@@ -129,17 +130,25 @@ public class TracksFragment extends Fragment {
         if (savedSort != currentSort) {
             currentSort = savedSort;
         }
-        // Always reload from MediaStore so metadata changes (e.g. from AudD identify) are reflected
-        loadSongs();
+        // MainActivity re-delivers fresh data in onResume; fragments just refresh UI.
+        applyFilter();
     }
 
     public void loadSongs() {
-        if (getContext() == null) return;
+        if (getContext() == null || !isAdded()) return;
+        MusicRepository.loadAllSongsAsync(getContext(), songs -> {
+            if (!isAdded() || isRemoving() || getContext() == null) return;
+            loadSongs(songs);
+        });
+    }
+
+    public void loadSongs(List<Song> songs) {
+        if (getContext() == null || !isAdded()) return;
         if (currentSort == null) {
             currentSort = getSettingsManager().getTracksSort();
         }
         allSongs.clear();
-        allSongs.addAll(MusicRepository.loadAllSongs(getContext()));
+        allSongs.addAll(songs);
         applyFilter();
     }
 

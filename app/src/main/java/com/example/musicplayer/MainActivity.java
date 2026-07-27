@@ -81,16 +81,7 @@ public class MainActivity extends BaseActivity {
 
     private final ActivityResultLauncher<String[]> permissionLauncher =
             registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), result -> {
-                Boolean audioGranted = result.get(Manifest.permission.READ_MEDIA_AUDIO);
-                Boolean notifGranted = result.get(Manifest.permission.POST_NOTIFICATIONS);
-                boolean audioOk = audioGranted != null && audioGranted;
-                // On API <= 32 READ_EXTERNAL_STORAGE is used; check it too.
-                if (Build.VERSION.SDK_INT <= 32) {
-                    audioOk = audioOk || (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED);
-                }
-                if (audioOk) {
-                    loadMusic();
-                }
+                // Permission state is observed in onResume, which reloads music when granted.
             });
 
     @Override
@@ -175,7 +166,7 @@ public class MainActivity extends BaseActivity {
         // Apply navigation bar inset to the mini player so it's not hidden
         applyNavigationBarInset(findViewById(R.id.miniPlayer));
 
-        checkPermissionsAndLoad();
+        checkPermissions();
 
         // Handle "Go to Artist" intent from context menu
         handleIncomingIntent();
@@ -225,37 +216,43 @@ public class MainActivity extends BaseActivity {
         }
     }
 
-    private void checkPermissionsAndLoad() {
-        boolean audioGranted;
-        if (Build.VERSION.SDK_INT >= 33) {
-            audioGranted = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_AUDIO) == PackageManager.PERMISSION_GRANTED;
-        } else {
-            audioGranted = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
-        }
+    /**
+     * Request audio permission if not already granted.
+     * Music loading is handled in {@link #onResume()} once permission is granted.
+     */
+    private void checkPermissions() {
+        if (isAudioPermissionGranted()) return;
+
         boolean notifGranted = true;
         if (Build.VERSION.SDK_INT >= 33) {
             notifGranted = ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED;
         }
 
-        if (audioGranted) {
-            loadMusic();
+        List<String> perms = new ArrayList<>();
+        if (Build.VERSION.SDK_INT >= 33) {
+            perms.add(Manifest.permission.READ_MEDIA_AUDIO);
+            if (!notifGranted) perms.add(Manifest.permission.POST_NOTIFICATIONS);
         } else {
-            List<String> perms = new ArrayList<>();
-            if (Build.VERSION.SDK_INT >= 33) {
-                perms.add(Manifest.permission.READ_MEDIA_AUDIO);
-                if (!notifGranted) perms.add(Manifest.permission.POST_NOTIFICATIONS);
-            } else {
-                perms.add(Manifest.permission.READ_EXTERNAL_STORAGE);
-            }
-            permissionLauncher.launch(perms.toArray(new String[0]));
+            perms.add(Manifest.permission.READ_EXTERNAL_STORAGE);
+        }
+        permissionLauncher.launch(perms.toArray(new String[0]));
+    }
+
+    private boolean isAudioPermissionGranted() {
+        if (Build.VERSION.SDK_INT >= 33) {
+            return ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_AUDIO) == PackageManager.PERMISSION_GRANTED;
+        } else {
+            return ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
         }
     }
 
     private void loadMusic() {
-        if (tracksFragment != null) tracksFragment.loadSongs();
-        if (albumsFragment != null) albumsFragment.loadAlbums();
-        if (playlistsFragment != null) playlistsFragment.loadSongs(
-                com.example.musicplayer.MusicRepository.loadAllSongs(this));
+        MusicRepository.loadAllSongsAsync(this, allSongs -> {
+            if (isFinishing() || isDestroyed()) return;
+            if (tracksFragment != null) tracksFragment.loadSongs(allSongs);
+            if (albumsFragment != null) albumsFragment.loadAlbums(allSongs);
+            if (playlistsFragment != null) playlistsFragment.loadSongs(allSongs);
+        });
     }
 
     private void applySearch(String query) {
@@ -295,6 +292,16 @@ public class MainActivity extends BaseActivity {
         if (duration > 0 && !miniUserDragging) {
             miniSeekBar.setMax(duration);
             miniSeekBar.setProgress(position);
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Refresh music data every time the activity returns so metadata changes
+        // (e.g. AudD, tag editor) are reflected in the library.
+        if (isAudioPermissionGranted()) {
+            loadMusic();
         }
     }
 

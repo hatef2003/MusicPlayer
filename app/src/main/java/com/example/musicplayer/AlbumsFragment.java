@@ -97,14 +97,32 @@ public class AlbumsFragment extends Fragment {
             fastScroller.attachRecyclerView(recyclerView);
         }
 
-        loadAlbums();
+        // Defer loading to onResume so MainActivity can pass data without
+        // triggering a redundant MediaStore query.
         return view;
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        // MainActivity re-delivers fresh data in onResume; fragments just refresh UI.
+        applyFilter();
+        updatePlayingIndicator();
+    }
+
     public void loadAlbums() {
-        if (getContext() == null) return;
+        if (getContext() == null || !isAdded()) return;
+        MusicRepository.loadAllSongsAsync(getContext(), songs -> {
+            if (!isAdded() || isRemoving() || getContext() == null) return;
+            loadAlbums(songs);
+            updatePlayingIndicator();
+        });
+    }
+
+    public void loadAlbums(List<Song> songs) {
+        if (getContext() == null || !isAdded()) return;
         allAlbums.clear();
-        allAlbums.addAll(MusicRepository.loadAlbums(getContext()));
+        allAlbums.addAll(MusicRepository.buildAlbums(songs));
         applyFilter();
         updatePlayingIndicator();
     }

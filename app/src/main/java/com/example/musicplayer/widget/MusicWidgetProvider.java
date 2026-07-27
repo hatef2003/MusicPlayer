@@ -134,15 +134,11 @@ public class MusicWidgetProvider extends AppWidgetProvider {
 
         views.setTextViewText(R.id.widgetTitle, safeTitle);
         views.setTextViewText(R.id.widgetArtist, safeArtist);
-        views.setTextColor(R.id.widgetTitle, accent);
 
-        // -- Header: MEDIA    ● ACTIVE/IDLE --
-        views.setTextViewText(R.id.widgetHeader,
-                "MEDIA    \u25CF " + (isPlaying ? "ACTIVE" : "IDLE"));
-
-        // -- Status: PLAYING/PAUSED below artist --
-        views.setTextViewText(R.id.widgetStatus, isPlaying ? "PLAYING" : "PAUSED");
-        views.setTextColor(R.id.widgetStatus, isPlaying ? accent : Color.parseColor("#666666"));
+        // -- Header: MEDIA (left) and ● ACTIVE/IDLE (right) --
+        views.setTextViewText(R.id.widgetHeader, "MEDIA");
+        views.setTextViewText(R.id.widgetStatus, isPlaying ? "\u25CF ACTIVE" : "\u25CF IDLE");
+        views.setTextColor(R.id.widgetStatus, isPlaying ? accent : Color.parseColor("#888888"));
 
         // -- Album art --
         if (albumArt != null) {
@@ -157,10 +153,10 @@ public class MusicWidgetProvider extends AppWidgetProvider {
             progress = Math.max(0, Math.min(1000, progress));
 
             views.setTextViewText(R.id.widgetProgressText,
-                    formatTime(position) + " " + unicodeProgressBar(position, duration) + " " + formatTime(duration));
+                    formatTime(position) + " / " + formatTime(duration));
             views.setProgressBar(R.id.widgetProgressBar, 1000, progress, false);
         } else {
-            views.setTextViewText(R.id.widgetProgressText, "");
+            views.setTextViewText(R.id.widgetProgressText, "0:00 / 0:00");
             views.setProgressBar(R.id.widgetProgressBar, 1000, 0, false);
         }
 
@@ -209,17 +205,6 @@ public class MusicWidgetProvider extends AppWidgetProvider {
         int minutes = totalSeconds / 60;
         int seconds = totalSeconds % 60;
         return String.format(Locale.US, "%d:%02d", minutes, seconds);
-    }
-
-    /** Build a unicode progress bar like "███████░░░" (12 blocks wide). */
-    private static String unicodeProgressBar(int position, int duration) {
-        if (duration <= 0) return "";
-        int blocks = 12;
-        int filled = Math.max(0, Math.min(blocks, (int) ((long) position * blocks / duration)));
-        StringBuilder sb = new StringBuilder(blocks * 2);
-        for (int i = 0; i < filled; i++) sb.append('\u2588'); // full block
-        for (int i = filled; i < blocks; i++) sb.append('\u2591'); // light shade
-        return sb.toString();
     }
 
     // === AppWidgetProvider lifecycle ===

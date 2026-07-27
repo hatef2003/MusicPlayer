@@ -11,4 +11,10 @@ public class MusicPlayerApplication extends Application {
         settingsManager.applyTheme();
         setTheme(settingsManager.getAccentColor().getThemeResId());
     }
+
+    @Override
+    public void onTerminate() {
+        super.onTerminate();
+        MusicRepository.shutdown();
+    }
 }
