@@ -4,7 +4,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.PopupMenu;
+
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -12,7 +12,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.example.musicplayer.model.Album;
-import com.example.musicplayer.model.Song;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -92,26 +91,15 @@ public class AlbumAdapter extends RecyclerView.Adapter<AlbumAdapter.AlbumViewHol
             if (listener != null) listener.onAlbumClicked(album);
         });
 
-        // Three-dot menu
+        // Three-dot menu — Tech UI context menu
         holder.menuBtn.setOnClickListener(v -> {
-            PopupMenu popup = new PopupMenu(v.getContext(), v);
-            popup.getMenuInflater().inflate(R.menu.menu_album_card, popup.getMenu());
-            popup.setOnMenuItemClickListener(item -> {
-                if (menuListener == null) return false;
-                int id = item.getItemId();
-                if (id == R.id.action_play_all) {
-                    menuListener.onPlayAll(album);
-                    return true;
-                } else if (id == R.id.action_shuffle_play) {
-                    menuListener.onShufflePlay(album);
-                    return true;
-                } else if (id == R.id.action_go_to_artist) {
-                    menuListener.onGoToArtist(album.getArtist());
-                    return true;
-                }
-                return false;
-            });
-            popup.show();
+            if (menuListener == null) return;
+            new TechContextMenu.Builder(v.getContext())
+                    .addItem(R.drawable.ic_menu_play_all, "Play All", () -> menuListener.onPlayAll(album))
+                    .addItem(R.drawable.ic_menu_shuffle, "Shuffle Play", () -> menuListener.onShufflePlay(album))
+                    .addSpacer()
+                    .addItem(R.drawable.ic_menu_artist, "Go to Artist", () -> menuListener.onGoToArtist(album.getArtist()))
+                    .show(v);
         });
     }
 

@@ -85,6 +85,15 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
 
     private final ExecutorService artExecutor = Executors.newSingleThreadExecutor();
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
+    private static final long WIDGET_PROGRESS_INTERVAL_MS = 1_000;
+    private final Runnable widgetProgressRunnable = new Runnable() {
+        @Override public void run() {
+            if (isPlaying()) {
+                MusicWidgetProvider.updateProgress(MusicService.this, getPosition());
+                mainHandler.postDelayed(this, WIDGET_PROGRESS_INTERVAL_MS);
+            }
+        }
+    };
 
     // Audio focus + becoming-noisy handling
     private AudioManager audioManager;
@@ -370,10 +379,14 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
 
     private void startNotifProgressUpdates() {
         // MediaStyle handles progress display via PlaybackState
+        // Also start the widget progress timer for real-time updates.
+        mainHandler.removeCallbacks(widgetProgressRunnable);
+        mainHandler.post(widgetProgressRunnable);
     }
 
     private void stopNotifProgressUpdates() {
         // MediaStyle handles progress display via PlaybackState
+        mainHandler.removeCallbacks(widgetProgressRunnable);
     }
 
     // ═══ PLAYBACK STATE PERSISTENCE (restart after system kill) ═══

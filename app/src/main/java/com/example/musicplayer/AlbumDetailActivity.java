@@ -137,6 +137,42 @@ public class AlbumDetailActivity extends BaseActivity {
         });
         recyclerView.setAdapter(adapter);
 
+        // ⋮ overflow menu → Tech UI context menu for album songs
+        adapter.setOnSongMenuClickListener((song, anchor) -> {
+            FavoritesManager favMgr = new FavoritesManager(this);
+            boolean isFav = favMgr.isFavorite(song.getId());
+            new TechContextMenu.Builder(this)
+                    .setSong(song)
+                    .addItem(R.drawable.ic_menu_add_playlist, "Add to Playlist", () -> {
+                        AddToPlaylistDialog dialog = AddToPlaylistDialog.newInstance(song);
+                        dialog.show(getSupportFragmentManager(), "add_to_playlist");
+                    })
+                    .addItem(R.drawable.ic_menu_favorite, isFav ? "Unfavorite" : "Favorite", () -> {
+                        boolean nowFav = favMgr.toggleFavorite(song.getId());
+                        android.widget.Toast.makeText(this,
+                                nowFav ? "Added to favorites" : "Removed from favorites",
+                                android.widget.Toast.LENGTH_SHORT).show();
+                    })
+                    .addSpacer()
+                    .addItem(R.drawable.ic_menu_details, "Track Details", () -> {
+                        new TrackDetailsDialog(this, song).show();
+                    })
+                    .addItem(R.drawable.ic_menu_share, "Share", () -> {
+                        SongActionsHelper.shareSong(this, song);
+                    })
+                    .addItem(R.drawable.ic_menu_ringtone, "Set as Ringtone", () -> {
+                        SongActionsHelper.setAsRingtone(this, song);
+                    })
+                    .addSpacer()
+                    .addDestructiveItem(R.drawable.ic_menu_delete, "Delete", () -> {
+                        SongActionsHelper.deleteSong(this, song, () -> {
+                            songs.remove(song);
+                            adapter.notifyDataSetChanged();
+                        });
+                    })
+                    .show(anchor);
+        });
+
         // Load album songs
         Album loadedAlbum = null;
         List<Album> albums = MusicRepository.loadAlbums(this);

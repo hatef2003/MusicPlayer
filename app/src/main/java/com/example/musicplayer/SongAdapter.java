@@ -1,6 +1,5 @@
 package com.example.musicplayer;
 
-import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,9 +22,18 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
         void onSongLongClicked(Song song);
     }
 
+    /**
+     * Callback for the ⋮ (overflow) menu button on each song item.
+     * The anchor view is passed so callers can position a TechContextMenu near it.
+     */
+    public interface OnSongMenuClickListener {
+        void onSongMenuClicked(Song song, View anchor);
+    }
+
     private final List<Song> songs;
     private final OnSongClickListener listener;
     private OnSongLongClickListener longClickListener;
+    private OnSongMenuClickListener menuClickListener;
     private long playingSongId = -1;
     private int accentColor = -1;
 
@@ -36,6 +44,10 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
 
     public void setOnLongClickListener(OnSongLongClickListener longClickListener) {
         this.longClickListener = longClickListener;
+    }
+
+    public void setOnSongMenuClickListener(OnSongMenuClickListener listener) {
+        this.menuClickListener = listener;
     }
 
     public void setPlayingSongId(long songId) {
@@ -93,6 +105,11 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
             if (longClickListener != null) longClickListener.onSongLongClicked(song);
             return true;
         });
+
+        // ⋮ overflow menu button
+        holder.menuBtn.setOnClickListener(v -> {
+            if (menuClickListener != null) menuClickListener.onSongMenuClicked(song, v);
+        });
     }
 
     @Override
@@ -105,6 +122,7 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
         TextView title;
         TextView artist;
         TextView duration;
+        TextView menuBtn;
 
         SongViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -112,6 +130,7 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
             title = itemView.findViewById(R.id.songTitle);
             artist = itemView.findViewById(R.id.songArtist);
             duration = itemView.findViewById(R.id.songDuration);
+            menuBtn = itemView.findViewById(R.id.songMenu);
         }
     }
 }

@@ -23,16 +23,27 @@ import java.util.Locale;
  * <p><b>Communication:</b>
  * <ul>
  *   <li>Widget -> Service: {@link PendingIntent} with {@link MusicService#ACTION_*} strings.</li>
- *   <li>Service -> Widget: {@link MusicService} calls {@link #updateAllWidgets} directly
- *       (inside {@code notifyStateChanged()} and {@code loadAlbumArtAsync()}).</li>
+ *   <li>Service -> Widget: {@link MusicService} calls {@link #updateAllWidgets} on state changes
+ *       and {@link #updateProgress} every second while playing.</li>
  * </ul>
  *
  * <p><b>Layout:</b> Terminal/hacker aesthetic -- dark background (#101010),
- * green accent, album art, text-based progress, prev / play-pause / next controls.</p>
+ * green accent, album art, text + real progress bar, prev / play-pause / next controls.</p>
  */
 public class MusicWidgetProvider extends AppWidgetProvider {
 
     private static final String TAG = "MusicWidgetProvider";
+
+    // Cached state so progress-only updates don't need to re-fetch metadata.
+    private static final class WidgetState {
+        boolean isPlaying;
+        String title;
+        String artist;
+        Bitmap albumArt;
+        int duration;
+    }
+
+    private static final WidgetState cachedState = new WidgetState();
 
     // -- Accent color map (matches SettingsManager.AccentColor) --
     private static int resolveAccentColor(Context context) {
@@ -56,6 +67,12 @@ public class MusicWidgetProvider extends AppWidgetProvider {
                                         Bitmap albumArt,
                                         int position,
                                         int duration) {
+        cachedState.isPlaying = isPlaying;
+        cachedState.title = title;
+        cachedState.artist = artist;
+        cachedState.albumArt = albumArt;
+        cachedState.duration = duration;
+
         AppWidgetManager mgr = AppWidgetManager.getInstance(context);
         ComponentName widget = new ComponentName(context, MusicWidgetProvider.class);
         int[] ids = mgr.getAppWidgetIds(widget);
@@ -68,6 +85,32 @@ public class MusicWidgetProvider extends AppWidgetProvider {
                 mgr.updateAppWidget(id, views);
             } catch (Exception e) {
                 android.util.Log.e(TAG, "updateAllWidgets failed for id=" + id, e);
+            }
+        }
+    }
+
+    /**
+     * Lightweight progress-only update. Uses cached metadata so the service can
+     * call this frequently (every second) without rebuilding expensive state.
+     */
+    public static void updateProgress(Context context, int position) {
+        AppWidgetManager mgr = AppWidgetManager.getInstance(context);
+        ComponentName widget = new ComponentName(context, MusicWidgetProvider.class);
+        int[] ids = mgr.getAppWidgetIds(widget);
+        if (ids == null || ids.length == 0) return;
+
+        RemoteViews views = buildRemoteViews(context,
+                cachedState.isPlaying,
+                cachedState.title,
+                cachedState.artist,
+                cachedState.albumArt,
+                position,
+                cachedState.duration);
+        for (int id : ids) {
+            try {
+                mgr.updateAppWidget(id, views);
+            } catch (Exception e) {
+                android.util.Log.e(TAG, "updateProgress failed for id=" + id, e);
             }
         }
     }
@@ -108,12 +151,17 @@ public class MusicWidgetProvider extends AppWidgetProvider {
             views.setImageViewResource(R.id.widgetAlbumArt, R.drawable.ic_album);
         }
 
-        // -- Progress: Unicode bar with timestamps --
+        // -- Progress: text + real ProgressBar --
         if (duration > 0) {
+            int progress = (int) ((long) position * 1000 / duration);
+            progress = Math.max(0, Math.min(1000, progress));
+
             views.setTextViewText(R.id.widgetProgressText,
                     formatTime(position) + " " + unicodeProgressBar(position, duration) + " " + formatTime(duration));
+            views.setProgressBar(R.id.widgetProgressBar, 1000, progress, false);
         } else {
             views.setTextViewText(R.id.widgetProgressText, "");
+            views.setProgressBar(R.id.widgetProgressBar, 1000, 0, false);
         }
 
         // -- Prev / Next tint --

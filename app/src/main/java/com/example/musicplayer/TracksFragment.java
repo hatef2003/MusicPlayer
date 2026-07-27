@@ -55,6 +55,46 @@ public class TracksFragment extends Fragment {
             AddToPlaylistDialog dialog = AddToPlaylistDialog.newInstance(song);
             dialog.show(getParentFragmentManager(), "add_to_playlist");
         });
+        // ⋮ overflow menu → Tech UI context menu
+        adapter.setOnSongMenuClickListener((song, anchor) -> {
+            if (getContext() == null) return;
+            FavoritesManager favMgr = new FavoritesManager(requireContext());
+            boolean isFav = favMgr.isFavorite(song.getId());
+            new TechContextMenu.Builder(requireContext())
+                    .setSong(song)
+                    .addItem(R.drawable.ic_menu_add_playlist, "Add to Playlist", () -> {
+                        AddToPlaylistDialog dialog = AddToPlaylistDialog.newInstance(song);
+                        dialog.show(getParentFragmentManager(), "add_to_playlist");
+                    })
+                    .addItem(R.drawable.ic_menu_favorite, isFav ? "Unfavorite" : "Favorite", () -> {
+                        boolean nowFav = favMgr.toggleFavorite(song.getId());
+                        android.widget.Toast.makeText(getContext(),
+                                nowFav ? "Added to favorites" : "Removed from favorites",
+                                android.widget.Toast.LENGTH_SHORT).show();
+                    })
+                    .addSpacer()
+                    .addItem(R.drawable.ic_menu_details, "Track Details", () -> {
+                        new TrackDetailsDialog(requireActivity(), song).show();
+                    })
+                    .addItem(R.drawable.ic_menu_album, "Go to Album", () -> {
+                        SongActionsHelper.goToAlbum(requireActivity(), song);
+                    })
+                    .addItem(R.drawable.ic_menu_artist, "Go to Artist", () -> {
+                        SongActionsHelper.goToArtist(requireActivity(), song);
+                    })
+                    .addSpacer()
+                    .addItem(R.drawable.ic_menu_share, "Share", () -> {
+                        SongActionsHelper.shareSong(requireContext(), song);
+                    })
+                    .addItem(R.drawable.ic_menu_ringtone, "Set as Ringtone", () -> {
+                        SongActionsHelper.setAsRingtone(requireContext(), song);
+                    })
+                    .addSpacer()
+                    .addDestructiveItem(R.drawable.ic_menu_delete, "Delete", () -> {
+                        SongActionsHelper.deleteSong(requireActivity(), song, () -> loadSongs());
+                    })
+                    .show(anchor);
+        });
         recyclerView.setAdapter(adapter);
 
         // ── Fast scroller (left-side scrollbar for quick navigation) ──

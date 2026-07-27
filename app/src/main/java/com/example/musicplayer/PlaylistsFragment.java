@@ -70,11 +70,16 @@ public class PlaylistsFragment extends Fragment implements PlaylistManager.OnPla
             public void onPlaylistClick(Playlist playlist) {
                 Intent intent = new Intent(requireContext(), PlaylistDetailActivity.class);
                 intent.putExtra("playlist_id", playlist.getId());
+                if (playlist.getId() == -1) {
+                    intent.putExtra("is_favorites", true);
+                }
                 startActivity(intent);
             }
 
             @Override
             public void onPlaylistLongClick(Playlist playlist) {
+                // Don't allow rename/delete on the special Favorites entry
+                if (playlist.getId() == -1) return;
                 showPlaylistOptionsDialog(playlist);
             }
         });
@@ -137,11 +142,19 @@ public class PlaylistsFragment extends Fragment implements PlaylistManager.OnPla
 
     private void loadPlaylists() {
         if (getContext() == null) return;
-        List<Playlist> playlists = playlistManager.getAllPlaylists();
+        List<Playlist> playlists = new java.util.ArrayList<>(playlistManager.getAllPlaylists());
+
+        // Prepend a special "★ Favorites" entry (id = -1)
+        FavoritesManager favMgr = new FavoritesManager(requireContext());
+        int favCount = favMgr.getFavoriteIds().size();
+        java.util.List<Long> favIds = new java.util.ArrayList<>(favMgr.getFavoriteIds());
+        Playlist favPlaylist = new Playlist(-1, "★ Favorites", favIds, 0);
+        playlists.add(0, favPlaylist);
+
         adapter.setPlaylists(playlists);
         if (fastScroller != null) fastScroller.refresh();
         if (emptyView != null) {
-            emptyView.setVisibility(playlists.isEmpty() ? View.VISIBLE : View.GONE);
+            emptyView.setVisibility(View.GONE); // Always show at least Favorites
         }
     }
 

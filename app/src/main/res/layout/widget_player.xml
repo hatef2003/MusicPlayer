@@ -100,7 +100,18 @@
             android:textColor="#9A9A9A"
             android:textSize="10sp"
             android:gravity="center"
-            android:layout_marginBottom="4dp" />
+            android:layout_marginBottom="2dp" />
+
+        <ProgressBar
+            android:id="@+id/widgetProgressBar"
+            style="@android:style/Widget.ProgressBar.Horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="4dp"
+            android:layout_marginBottom="4dp"
+            android:max="1000"
+            android:progress="0"
+            android:indeterminate="false"
+            android:progressDrawable="@drawable/notif_progress_drawable" />
 
         <!-- ═══ PLAYBACK CONTROLS ═══ -->
         <LinearLayout

@@ -13,6 +13,7 @@ import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.widget.SearchView;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -175,6 +176,53 @@ public class MainActivity extends BaseActivity {
         applyNavigationBarInset(findViewById(R.id.miniPlayer));
 
         checkPermissionsAndLoad();
+
+        // Handle "Go to Artist" intent from context menu
+        handleIncomingIntent();
+
+        // ── Tab-aware back navigation ──
+        // 1st back: if search is active → clear search
+        // 2nd back: if not on Tracks tab → go to Tracks tab
+        // 3rd back: exit app
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                // If search is active, clear it first
+                if (!currentQuery.isEmpty()) {
+                    searchView.setQuery("", false);
+                    applySearch("");
+                    return;
+                }
+                // If not on the Tracks tab, go to Tracks tab
+                if (viewPager.getCurrentItem() != 0) {
+                    viewPager.setCurrentItem(0, true);
+                    return;
+                }
+                // We're on Tracks with no search — allow default behavior (exit app)
+                setEnabled(false);
+                getOnBackPressedDispatcher().onBackPressed();
+            }
+        });
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        handleIncomingIntent();
+    }
+
+    /** If the intent carries a filter_artist extra, apply it as a search filter. */
+    private void handleIncomingIntent() {
+        Intent intent = getIntent();
+        if (intent != null && intent.hasExtra("filter_artist")) {
+            String artist = intent.getStringExtra("filter_artist");
+            intent.removeExtra("filter_artist"); // consume it once
+            if (artist != null && !artist.isEmpty()) {
+                // Delay slightly so the tabs/fragments are ready
+                viewPager.post(() -> searchByArtist(artist));
+            }
+        }
     }
 
     private void checkPermissionsAndLoad() {

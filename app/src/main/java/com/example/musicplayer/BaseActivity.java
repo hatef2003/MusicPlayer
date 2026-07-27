@@ -1,5 +1,6 @@
 package com.example.musicplayer;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 
@@ -33,6 +34,16 @@ public abstract class BaseActivity extends AppCompatActivity {
                     v.getPaddingRight(), v.getPaddingBottom());
             return insets;
         });
+    }
+
+    /**
+     * Handle the API 30+ MediaStore delete result from SongActionsHelper.
+     * Override in subclasses but call super.onActivityResult() first.
+     */
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        SongActionsHelper.handleDeleteResult(requestCode, resultCode);
     }
 
     /**
