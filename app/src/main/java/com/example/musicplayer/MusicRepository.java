@@ -37,7 +37,8 @@ public class MusicRepository {
                 MediaStore.Audio.Media.ALBUM,
                 MediaStore.Audio.Media.ALBUM_ID,
                 MediaStore.Audio.Media.DURATION,
-                MediaStore.Audio.Media.DATE_ADDED
+                MediaStore.Audio.Media.DATE_ADDED,
+                MediaStore.Audio.Media.DISPLAY_NAME
         };
         String selection = MediaStore.Audio.Media.IS_MUSIC + " != 0";
         String sortOrder = MediaStore.Audio.Media.TITLE + " ASC";
@@ -54,7 +55,7 @@ public class MusicRepository {
             int durationCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DURATION);
             int dateAddedCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DATE_ADDED);
 
-            while (cursor.moveToNext()) {
+            if (cursor.moveToFirst()) do {
                 long id = cursor.getLong(idCol);
                 String title = cursor.getString(titleCol);
                 String artist = cursor.getString(artistCol);
@@ -65,7 +66,7 @@ public class MusicRepository {
                 Uri contentUri = ContentUris.withAppendedId(
                         MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, id);
                 songs.add(new Song(id, title, artist, album, albumId, duration, dateAdded, contentUri));
-            }
+            } while (cursor.moveToNext());
         }
         return songs;
     }

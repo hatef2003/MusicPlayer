@@ -90,6 +90,30 @@ public class SettingsActivity extends BaseActivity {
             }
         });
 
+        // Telegram bot token + base URL
+        EditText tgBotTokenInput = findViewById(R.id.tgBotTokenInput);
+        String savedBotToken = settingsManager.getTelegramBotToken();
+        if (!savedBotToken.isEmpty()) tgBotTokenInput.setText(savedBotToken);
+        tgBotTokenInput.addTextChangedListener(new TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
+            @Override public void onTextChanged(CharSequence s, int start, int before, int count) { }
+            @Override public void afterTextChanged(Editable s) {
+                settingsManager.setTelegramBotToken(s.toString());
+            }
+        });
+
+        EditText tgBaseUrlInput = findViewById(R.id.tgBaseUrlInput);
+        String savedBaseUrl = settingsManager.getTelegramBaseUrl();
+        if (!"https://api.telegram.org".equals(savedBaseUrl)) tgBaseUrlInput.setText(savedBaseUrl);
+        tgBaseUrlInput.addTextChangedListener(new TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
+            @Override public void onTextChanged(CharSequence s, int start, int before, int count) { }
+            @Override public void afterTextChanged(Editable s) {
+                String val = s.toString().trim();
+                settingsManager.setTelegramBaseUrl(val.isEmpty() ? "https://api.telegram.org" : val);
+            }
+        });
+
         // Pause on call / audio focus toggle
         SwitchCompat pauseOnFocusSwitch = findViewById(R.id.pauseOnFocusSwitch);
         if (pauseOnFocusSwitch != null) {

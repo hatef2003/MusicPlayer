@@ -15,6 +15,7 @@ A modern Android music player with a clean, dark interface built in Java.
 - **Accent Colors** — Green, Blue, Orange, and Purple themes
 - **Sorting** — Sort by title, artist, album, duration, or date added
 - **Headphone & Bluetooth** — Media button support via MediaSession
+- **Telegram Bot** — Browse music from Telegram forum groups, view track metadata, and download songs directly into your library
 
 ## Screenshots
 
@@ -48,6 +49,7 @@ A modern Android music player with a clean, dark interface built in Java.
 | `INTERNET` | Fetch lyrics from AUDD API |
 | `FOREGROUND_SERVICE` | Background music playback |
 | `POST_NOTIFICATIONS` | Media playback notification (Android 13+) |
+| `INTERNET` | Telegram Bot API communication and file downloads |
 
 ## Build
 

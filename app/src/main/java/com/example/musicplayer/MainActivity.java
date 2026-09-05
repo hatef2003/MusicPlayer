@@ -39,6 +39,7 @@ public class MainActivity extends BaseActivity {
     private TracksFragment tracksFragment;
     private AlbumsFragment albumsFragment;
     private PlaylistsFragment playlistsFragment;
+    private TelegramFragment telegramFragment;
     private SearchView searchView;
     private String currentQuery = "";
     private static final String KEY_SEARCH_QUERY = "search_query";
@@ -102,6 +103,7 @@ public class MainActivity extends BaseActivity {
         tracksFragment = new TracksFragment();
         albumsFragment = new AlbumsFragment();
         playlistsFragment = new PlaylistsFragment();
+        telegramFragment = new TelegramFragment();
 
         viewPager.setAdapter(new PagerAdapter(this));
         viewPager.setOffscreenPageLimit(2);
@@ -111,6 +113,7 @@ public class MainActivity extends BaseActivity {
                         case 0: tab.setText("Tracks"); break;
                         case 1: tab.setText("Albums"); break;
                         case 2: tab.setText("Playlists"); break;
+                        case 3: tab.setText("Telegram"); break;
                     }
                 }).attach();
 
@@ -182,6 +185,10 @@ public class MainActivity extends BaseActivity {
                 if (!currentQuery.isEmpty()) {
                     searchView.setQuery("", false);
                     applySearch("");
+                    return;
+                }
+                // If on Telegram tab, handle back within fragment
+                if (viewPager.getCurrentItem() == 3 && telegramFragment.handleBack()) {
                     return;
                 }
                 // If not on the Tracks tab, go to Tracks tab
@@ -331,11 +338,12 @@ public class MainActivity extends BaseActivity {
             switch (position) {
                 case 0: return tracksFragment;
                 case 1: return albumsFragment;
-                default: return playlistsFragment;
+                case 2: return playlistsFragment;
+                default: return telegramFragment;
             }
         }
 
         @Override
-        public int getItemCount() { return 3; }
+        public int getItemCount() { return 4; }
     }
 }

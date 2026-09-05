@@ -374,6 +374,85 @@
             android:layout_marginTop="16dp"
             android:layout_marginBottom="16dp" />
 
+        <!-- ═══ TELEGRAM BOT ═══ -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="TELEGRAM_BOT"
+            android:textColor="@color/terminal_green"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:fontFamily="monospace"
+            android:letterSpacing="0.15"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Connect to a Telegram bot to browse music in forum groups."
+            android:textColor="@color/text_secondary"
+            android:textSize="10sp"
+            android:fontFamily="monospace"
+            android:layout_marginBottom="8dp" />
+
+        <EditText
+            android:id="@+id/tgBotTokenInput"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:fontFamily="monospace"
+            android:textColor="@color/text_primary"
+            android:textColorHint="@color/terminal_dim"
+            android:hint="bot token from @BotFather"
+            android:textSize="12sp"
+            android:background="@drawable/bg_song_card"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:inputType="textPassword"
+            android:singleLine="true"
+            android:importantForAutofill="no" />
+
+        <EditText
+            android:id="@+id/tgBaseUrlInput"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="8dp"
+            android:fontFamily="monospace"
+            android:textColor="@color/text_primary"
+            android:textColorHint="@color/terminal_dim"
+            android:hint="API base URL (default: api.telegram.org)"
+            android:textSize="12sp"
+            android:background="@drawable/bg_song_card"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:inputType="textUri"
+            android:singleLine="true"
+            android:importantForAutofill="no" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="Disable privacy mode in @BotFather. Add bot as admin to forum group."
+            android:textColor="@color/terminal_dim"
+            android:textSize="9sp"
+            android:fontFamily="monospace"
+            android:layout_marginBottom="4dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="For files >20MB, run a Telegram Local Bot API server and enter its URL above."
+            android:textColor="@color/terminal_dim"
+            android:textSize="9sp"
+            android:fontFamily="monospace" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/terminal_dim"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="16dp" />
+
         <!-- ═══ HELP / PATCH NOTES ═══ -->
         <TextView
             android:layout_width="match_parent"

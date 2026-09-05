@@ -17,6 +17,10 @@ public class SettingsManager {
     private static final String KEY_PAUSE_ON_FOCUS_LOSS = "pause_on_focus_loss";
     /** When true (default), the player pauses when headphones are disconnected (ACTION_AUDIO_BECOMING_NOISY). */
     private static final String KEY_PAUSE_ON_BECOMING_NOISY = "pause_on_becoming_noisy";
+    /** BotFather bot token (e.g. "123456789:AABBcc-DDeeff..." from @BotFather). */
+    private static final String KEY_TELEGRAM_BOT_TOKEN = "telegram_bot_token";
+    /** Telegram Bot API base URL (default https://api.telegram.org, or local Bot API server). */
+    private static final String KEY_TELEGRAM_BASE_URL = "telegram_base_url";
 
 
     public enum Theme {
@@ -150,7 +154,22 @@ public class SettingsManager {
         prefs.edit().putBoolean(KEY_PAUSE_ON_BECOMING_NOISY, enabled).apply();
     }
 
+    public String getTelegramBotToken() {
+        return prefs.getString(KEY_TELEGRAM_BOT_TOKEN, "");
+    }
 
+    public void setTelegramBotToken(String token) {
+        prefs.edit().putString(KEY_TELEGRAM_BOT_TOKEN, token == null ? "" : token.trim()).apply();
+    }
+
+    public String getTelegramBaseUrl() {
+        return prefs.getString(KEY_TELEGRAM_BASE_URL, "https://api.telegram.org");
+    }
+
+    public void setTelegramBaseUrl(String url) {
+        prefs.edit().putString(KEY_TELEGRAM_BASE_URL,
+                url == null ? "https://api.telegram.org" : url.trim()).apply();
+    }
 
     public void applyTheme() {
         applyTheme(getTheme());
