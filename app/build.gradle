@@ -16,12 +16,15 @@ android {
 
     buildTypes {
         release {
-            minifyEnabled false
+            minifyEnabled true
+            shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
 
     lint {
+        // Kept off: the lint-gradle artifact can't be fetched in this environment.
+        // Re-enable (checkReleaseBuilds true) when Google Maven is reachable.
         checkReleaseBuilds false
     }
 
