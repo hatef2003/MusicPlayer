@@ -40,6 +40,7 @@ public class MainActivity extends BaseActivity {
     private AlbumsFragment albumsFragment;
     private PlaylistsFragment playlistsFragment;
     private TelegramFragment telegramFragment;
+    private TelegramLocalFragment telegramLocalFragment;
     private SearchView searchView;
     private String currentQuery = "";
     private static final String KEY_SEARCH_QUERY = "search_query";
@@ -104,9 +105,10 @@ public class MainActivity extends BaseActivity {
         albumsFragment = new AlbumsFragment();
         playlistsFragment = new PlaylistsFragment();
         telegramFragment = new TelegramFragment();
+        telegramLocalFragment = new TelegramLocalFragment();
 
         viewPager.setAdapter(new PagerAdapter(this));
-        viewPager.setOffscreenPageLimit(2);
+        viewPager.setOffscreenPageLimit(3);
         new TabLayoutMediator(tabLayout, viewPager,
                 (tab, position) -> {
                     switch (position) {
@@ -114,6 +116,7 @@ public class MainActivity extends BaseActivity {
                         case 1: tab.setText("Albums"); break;
                         case 2: tab.setText("Playlists"); break;
                         case 3: tab.setText("Telegram"); break;
+                        case 4: tab.setText("TG-Local"); break;
                     }
                 }).attach();
 
@@ -189,6 +192,12 @@ public class MainActivity extends BaseActivity {
                 }
                 // If on Telegram tab, handle back within fragment
                 if (viewPager.getCurrentItem() == 3 && telegramFragment.handleBack()) {
+                    return;
+                }
+                // If on TG-Local tab, handle back within fragment
+                if (viewPager.getCurrentItem() == 4 && telegramLocalFragment != null) {
+                    // TG-Local has no back navigation; just go back to Tracks
+                    viewPager.setCurrentItem(0, true);
                     return;
                 }
                 // If not on the Tracks tab, go to Tracks tab
@@ -339,11 +348,13 @@ public class MainActivity extends BaseActivity {
                 case 0: return tracksFragment;
                 case 1: return albumsFragment;
                 case 2: return playlistsFragment;
+                case 3: return telegramFragment;
+                case 4: return telegramLocalFragment;
                 default: return telegramFragment;
             }
         }
 
         @Override
-        public int getItemCount() { return 4; }
+        public int getItemCount() { return 5; }
     }
 }
