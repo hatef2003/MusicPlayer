@@ -94,11 +94,30 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
     private final Runnable widgetProgressRunnable = new Runnable() {
         @Override public void run() {
             if (isPlaying()) {
+                accumulateListenTime();
+                if (checkLearnedOutro()) return; // advanced to the next track
                 MusicWidgetProvider.updateProgress(MusicService.this, getPosition());
                 mainHandler.postDelayed(this, WIDGET_PROGRESS_INTERVAL_MS);
             }
         }
     };
+
+    // ── Play stats ──
+    // A play counts once the user has *listened* to half the track (max 4 min).
+    // Listened time is accumulated from wall-clock ticks while playing, so
+    // seeking forward or skipping quickly does not count as a play.
+    private static final long PLAY_COUNT_MAX_THRESHOLD_MS = 4 * 60_000;
+    private static final long PLAY_COUNT_FALLBACK_THRESHOLD_MS = 30_000;
+    private long listenedMs = 0;
+    private long lastListenTick = 0;
+    private boolean playCounted = false;
+
+    // ── Smart Skip (learned intro / outro skipping, see SmartSkipManager) ──
+    /** Position we auto-jumped to at track start, or 0 if no intro skip happened. */
+    private long autoSkippedIntroMs = 0;
+    /** Learned auto-advance point for the current track, or 0. */
+    private long learnedOutroMs = 0;
+    private boolean outroTriggered = false;
 
     // Audio focus + becoming-noisy handling
     private AudioManager audioManager;
@@ -228,6 +247,10 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
             isPreparing = true;
             playOnPrepare = true;
             currentArtBitmap = null;
+            resetListenTracking();
+            autoSkippedIntroMs = 0;
+            outroTriggered = false;
+            learnedOutroMs = 0;
             long generation = ++prepareGeneration;
             currentPrepareGeneration = generation;
 
@@ -258,6 +281,8 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
         if (pendingSeekOnPrepared > 0) {
             mediaPlayer.seekTo(pendingSeekOnPrepared);
             pendingSeekOnPrepared = 0;
+        } else {
+            applyLearnedSkips();
         }
 
         if (playOnPrepare) {
@@ -313,7 +338,14 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
         }
     }
 
+    /** User-initiated Next (UI, notification, headset). Learns outro skips. */
     public void next() {
+        learnOutroSkip();
+        advanceToNext();
+    }
+
+    /** Move to the following track without learning anything (completion, auto-advance). */
+    private void advanceToNext() {
         if (repeatMode == RepeatMode.ONE) {
             playCurrent();
         } else if (currentIndex < queue.size() - 1) {
@@ -376,10 +408,12 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
     public boolean isShuffleOn() { return shuffleOn; }
     public RepeatMode getRepeatMode() { return repeatMode; }
 
+    /** User-initiated seek (seek bar, lock screen, Bluetooth). Learns intro skips. */
     public void seekTo(int msec) {
         if (isPreparing) {
             pendingSeekOnPrepared = msec;
         } else if (isPrepared) {
+            learnFromSeek(getPosition(), msec);
             mediaPlayer.seekTo(msec);
         }
     }
@@ -450,12 +484,124 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
         // MediaStyle handles progress display via PlaybackState
         // Also start the widget progress timer for real-time updates.
         mainHandler.removeCallbacks(widgetProgressRunnable);
+        // Already ticking (repeat state push while playing): bank the time so far.
+        // Otherwise start a fresh interval so time spent paused is never counted.
+        if (lastListenTick != 0) accumulateListenTime();
+        else lastListenTick = android.os.SystemClock.elapsedRealtime();
         mainHandler.post(widgetProgressRunnable);
     }
 
     private void stopNotifProgressUpdates() {
         // MediaStyle handles progress display via PlaybackState
+        accumulateListenTime();
+        lastListenTick = 0;
         mainHandler.removeCallbacks(widgetProgressRunnable);
+    }
+
+    // ═══ SMART SKIP ═══
+
+    /** On track start: jump past a learned intro and arm a learned outro. */
+    private void applyLearnedSkips() {
+        Song song = getCurrentSong();
+        SmartSkipManager skip = SmartSkipManager.getInstance(this);
+        if (song == null || !skip.isEnabled()) return;
+        int duration = mediaPlayer.getDuration();
+
+        long intro = skip.getLearnedIntroMs(song.getId());
+        if (intro > 0 && (duration <= 0 || intro < duration / 2)) {
+            mediaPlayer.seekTo((int) intro);
+            autoSkippedIntroMs = intro;
+            toast("⏭ Smart Skip: intro skipped · seek to 0:00 to keep it");
+        }
+
+        long outro = skip.getLearnedOutroMs(song.getId());
+        if (outro > 0 && (duration <= 0 || outro < duration)) learnedOutroMs = outro;
+    }
+
+    /** Called from the 1 s tick; auto-advances at a learned outro. Returns true if it did. */
+    private boolean checkLearnedOutro() {
+        if (learnedOutroMs <= 0 || outroTriggered) return false;
+        if (getPosition() < learnedOutroMs) return false;
+        outroTriggered = true;
+        toast("⏭ Smart Skip: outro skipped");
+        // A natural completion arrives with the player stopped; match that so the
+        // end-of-queue branch doesn't leave audio running behind a "paused" UI.
+        if (mediaPlayer.isPlaying()) mediaPlayer.pause();
+        onCompletion(mediaPlayer); // same path as a natural end (counts the play, honours repeat)
+        return true;
+    }
+
+    private void learnFromSeek(int fromMs, int toMs) {
+        Song song = getCurrentSong();
+        SmartSkipManager skip = SmartSkipManager.getInstance(this);
+        if (song == null || !skip.isEnabled()) return;
+
+        // Undo: user went back to the start right after we skipped the intro.
+        if (autoSkippedIntroMs > 0 && toMs < 2_000
+                && fromMs < autoSkippedIntroMs + SmartSkipManager.INTRO_SEEK_FROM_MAX_MS) {
+            skip.forgetIntro(song.getId());
+            autoSkippedIntroMs = 0;
+            toast("Smart Skip: this intro will play from now on");
+            return;
+        }
+
+        int duration = getDuration();
+        boolean introSkip = autoSkippedIntroMs == 0
+                && fromMs <= SmartSkipManager.INTRO_SEEK_FROM_MAX_MS
+                && toMs - fromMs >= SmartSkipManager.INTRO_MIN_JUMP_MS
+                && toMs <= SmartSkipManager.INTRO_TARGET_MAX_MS
+                && (duration <= 0 || toMs < duration / 2);
+        if (introSkip) skip.recordIntroSkip(song.getId(), toMs);
+    }
+
+    private void learnOutroSkip() {
+        if (!isPrepared) return;
+        Song song = getCurrentSong();
+        SmartSkipManager skip = SmartSkipManager.getInstance(this);
+        if (song == null || !skip.isEnabled()) return;
+        int pos = getPosition();
+        int duration = getDuration();
+        if (duration <= 0) return;
+        if (pos >= duration * SmartSkipManager.OUTRO_MIN_FRACTION
+                && duration - pos >= SmartSkipManager.OUTRO_MIN_REMAINING_MS) {
+            skip.recordOutroSkip(song.getId(), pos);
+        }
+    }
+
+    private void toast(String text) {
+        android.widget.Toast.makeText(getApplicationContext(), text,
+                android.widget.Toast.LENGTH_SHORT).show();
+    }
+
+    // ═══ PLAY STATS ═══
+
+    private void resetListenTracking() {
+        listenedMs = 0;
+        lastListenTick = 0;
+        playCounted = false;
+    }
+
+    /** Add the wall-clock time since the last tick and record a play once the threshold is met. */
+    private void accumulateListenTime() {
+        if (lastListenTick == 0) return;
+        long now = android.os.SystemClock.elapsedRealtime();
+        // Cap a single delta so a stalled handler can't credit minutes at once.
+        listenedMs += Math.min(now - lastListenTick, 2 * WIDGET_PROGRESS_INTERVAL_MS);
+        lastListenTick = now;
+        if (!playCounted && listenedMs >= playCountThresholdMs()) recordCurrentPlay();
+    }
+
+    private long playCountThresholdMs() {
+        int duration = getDuration();
+        if (duration <= 0) return PLAY_COUNT_FALLBACK_THRESHOLD_MS;
+        return Math.min(duration / 2L, PLAY_COUNT_MAX_THRESHOLD_MS);
+    }
+
+    private void recordCurrentPlay() {
+        Song song = getCurrentSong();
+        if (song == null) return;
+        playCounted = true;
+        PlayStatsManager.getInstance(this).recordPlay(song.getId());
     }
 
     // ═══ PLAYBACK STATE PERSISTENCE (restart after system kill) ═══
@@ -631,10 +777,13 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
 
     @Override
     public void onCompletion(MediaPlayer mp) {
+        // Playing to the end always counts (covers tracks shorter than one tick).
+        accumulateListenTime();
+        if (!playCounted && listenedMs > 0) recordCurrentPlay();
         if (repeatMode == RepeatMode.ONE) {
             playCurrent();
         } else if (currentIndex < queue.size() - 1) {
-            next();
+            advanceToNext();
         } else if (repeatMode == RepeatMode.ALL) {
             currentIndex = 0;
             playCurrent();

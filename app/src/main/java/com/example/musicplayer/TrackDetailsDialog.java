@@ -67,6 +67,19 @@ public class TrackDetailsDialog extends Dialog {
         addField(root, "FILE SIZE", getFileSize(song.getContentUri()));
         addField(root, "DATE ADDED", formatDate(song.getDateAdded()));
 
+        // Listening stats
+        PlayStatsManager.Stat stat = PlayStatsManager.getInstance(getContext()).getStat(song.getId());
+        addField(root, "PLAY COUNT", String.valueOf(stat.count));
+        addField(root, "LAST PLAYED", stat.lastPlayed > 0
+                ? PlaylistDetailActivity.formatAgo(stat.lastPlayed) : "never");
+
+        // Smart Skip (only shown once something has been learned)
+        SmartSkipManager skip = SmartSkipManager.getInstance(getContext());
+        long intro = skip.getLearnedIntroMs(song.getId());
+        long outro = skip.getLearnedOutroMs(song.getId());
+        if (intro > 0) addField(root, "SMART SKIP INTRO", "starts at " + mmss(intro));
+        if (outro > 0) addField(root, "SMART SKIP OUTRO", "moves on at " + mmss(outro));
+
         // File path (best effort)
         String path = getFilePath(song.getId());
         if (path != null) {
@@ -107,6 +120,11 @@ public class TrackDetailsDialog extends Dialog {
     }
 
     // ── Helpers ────────────────────────────────────────────────────────
+
+    private static String mmss(long ms) {
+        long s = ms / 1000;
+        return String.format(java.util.Locale.US, "%d:%02d", s / 60, s % 60);
+    }
 
     private void addField(LinearLayout root, String label, String value) {
         root.addView(createLabel(label, 10, 0xFF8A8A8A, 0.1f));

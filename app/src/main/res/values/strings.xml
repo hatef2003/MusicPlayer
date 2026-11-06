@@ -43,4 +43,7 @@
 
     <!-- Widget -->
     <string name="widget_description">Terminal-style music player controls for your home screen</string>
+    <string name="settings_smart_skip">Smart Skip</string>
+    <string name="settings_smart_skip_desc">Learns the intros and outros you skip on each song and skips them for you. Seek back to 0:00 to undo for a song.</string>
+    <string name="settings_smart_skip_forget">Forget learned skips (%1$d songs)</string>
 </resources>

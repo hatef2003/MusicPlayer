@@ -9,6 +9,8 @@ A modern Android music player with a clean, dark interface built in Java.
 - **Synced Lyrics** — Fetches and displays time-synced lyrics from AUDD API
 - **Lyrics Embedding** — Embed lyrics directly into audio file metadata
 - **Playlist Management** — Create, edit, and manage custom playlists with M3U support
+- **Smart Skip** — Learns the intros and outros you skip on each song and skips them for you; seek back to 0:00 to undo. See [docs/smart-skip.md](docs/smart-skip.md)
+- **Play Stats** — Play counts and last-played times, with automatic *Most played* and *Recently played* playlists
 - **Album Detail View** — Browse songs by album with album art
 - **System Media Controls** — Native Android MediaStyle notification with playback controls on lock screen and quick settings
 - **Themes** — System, Light, and Dark mode support

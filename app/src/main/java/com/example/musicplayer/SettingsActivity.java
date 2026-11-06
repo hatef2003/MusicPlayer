@@ -130,6 +130,26 @@ public class SettingsActivity extends BaseActivity {
                     settingsManager.setPauseOnBecomingNoisy(isChecked));
         }
 
+        // Smart Skip toggle + reset
+        SmartSkipManager smartSkip = SmartSkipManager.getInstance(this);
+        SwitchCompat smartSkipSwitch = findViewById(R.id.smartSkipSwitch);
+        TextView smartSkipForget = findViewById(R.id.smartSkipForget);
+        if (smartSkipSwitch != null) {
+            smartSkipSwitch.setChecked(smartSkip.isEnabled());
+            smartSkipSwitch.setOnCheckedChangeListener((button, isChecked) ->
+                    smartSkip.setEnabled(isChecked));
+        }
+        if (smartSkipForget != null) {
+            smartSkipForget.setText(getString(R.string.settings_smart_skip_forget,
+                    smartSkip.learnedSongCount()));
+            smartSkipForget.setOnClickListener(v -> {
+                smartSkip.forgetAll();
+                smartSkipForget.setText(getString(R.string.settings_smart_skip_forget, 0));
+                android.widget.Toast.makeText(this, "Smart Skip: all learned skips forgotten",
+                        android.widget.Toast.LENGTH_SHORT).show();
+            });
+        }
+
 
     }
 
