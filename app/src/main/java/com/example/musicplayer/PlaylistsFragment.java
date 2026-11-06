@@ -78,8 +78,8 @@ public class PlaylistsFragment extends Fragment implements PlaylistManager.OnPla
 
             @Override
             public void onPlaylistLongClick(Playlist playlist) {
-                // Don't allow rename/delete on the special Favorites entry
-                if (playlist.getId() == -1) return;
+                // Don't allow rename/delete on the special Favorites / auto entries
+                if (playlist.getId() < 0) return;
                 showPlaylistOptionsDialog(playlist);
             }
         });
@@ -137,6 +137,12 @@ public class PlaylistsFragment extends Fragment implements PlaylistManager.OnPla
     public void loadSongs(List<Song> songs) {
         allSongs.clear();
         allSongs.addAll(songs);
+        if (!songs.isEmpty() && getContext() != null) {
+            // Forget history for tracks that were deleted from the device.
+            java.util.Set<Long> ids = new java.util.HashSet<>();
+            for (Song s : songs) ids.add(s.getId());
+            PlayStatsManager.getInstance(requireContext()).prune(ids);
+        }
         if (adapter != null) loadPlaylists();
     }
 
@@ -151,11 +157,35 @@ public class PlaylistsFragment extends Fragment implements PlaylistManager.OnPla
         Playlist favPlaylist = new Playlist(-1, "★ Favorites", favIds, 0);
         playlists.add(0, favPlaylist);
 
+        // Auto-playlists built from listening history
+        PlayStatsManager stats = PlayStatsManager.getInstance(requireContext());
+        playlists.add(1, new Playlist(PlayStatsManager.MOST_PLAYED_ID, "▲ Most played",
+                existingOnly(stats.getMostPlayedIds(PlayStatsManager.AUTO_PLAYLIST_LIMIT)), 0));
+        playlists.add(2, new Playlist(PlayStatsManager.RECENTLY_PLAYED_ID, "◷ Recently played",
+                existingOnly(stats.getRecentlyPlayedIds(PlayStatsManager.AUTO_PLAYLIST_LIMIT)), 0));
+
         adapter.setPlaylists(playlists);
         if (fastScroller != null) fastScroller.refresh();
         if (emptyView != null) {
             emptyView.setVisibility(View.GONE); // Always show at least Favorites
         }
+    }
+
+    /** Keep only IDs of songs still on the device, so counts match what opens. */
+    private List<Long> existingOnly(List<Long> ids) {
+        if (allSongs.isEmpty()) return ids; // library not loaded yet
+        java.util.Set<Long> present = new java.util.HashSet<>();
+        for (Song s : allSongs) present.add(s.getId());
+        List<Long> out = new ArrayList<>();
+        for (long id : ids) if (present.contains(id)) out.add(id);
+        return out;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        // Play stats change while music plays; refresh the auto-playlist counts.
+        if (adapter != null) loadPlaylists();
     }
 
     @Override

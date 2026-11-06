@@ -34,8 +34,18 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
     private final OnSongClickListener listener;
     private OnSongLongClickListener longClickListener;
     private OnSongMenuClickListener menuClickListener;
+    /** Optional extra text appended to the artist line (e.g. "12 plays"). */
+    public interface SongNoteProvider {
+        String noteFor(Song song);
+    }
+
     private long playingSongId = -1;
     private int accentColor = -1;
+    private SongNoteProvider noteProvider;
+
+    public void setSongNoteProvider(SongNoteProvider provider) {
+        this.noteProvider = provider;
+    }
 
     public SongAdapter(List<Song> songs, OnSongClickListener listener) {
         this.songs = songs;
@@ -79,7 +89,10 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
 
         holder.trackNumber.setText(String.format(java.util.Locale.US, "%02d", position + 1));
         holder.title.setText(song.getTitle());
-        holder.artist.setText(song.getArtist());
+        String note = noteProvider != null ? noteProvider.noteFor(song) : null;
+        holder.artist.setText(note == null || note.isEmpty()
+                ? song.getArtist()
+                : song.getArtist() + "  ·  " + note);
         holder.duration.setText(song.getDurationLabel());
 
         if (isPlaying) {

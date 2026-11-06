@@ -27,6 +27,10 @@ public class PlaylistDetailActivity extends BaseActivity {
 
     private long playlistId;
     private boolean isFavorites;
+    /** Auto-playlists generated from {@link PlayStatsManager}. */
+    private boolean isMostPlayed, isRecentlyPlayed;
+
+    private boolean isAutoPlaylist() { return isMostPlayed || isRecentlyPlayed; }
     private PlaylistManager playlistManager;
     private SongAdapter adapter;
     private List<Song> playlistSongs = new ArrayList<>();
@@ -50,6 +54,8 @@ public class PlaylistDetailActivity extends BaseActivity {
 
         playlistId = getIntent().getLongExtra("playlist_id", -1);
         isFavorites = getIntent().getBooleanExtra("is_favorites", false);
+        isMostPlayed = playlistId == PlayStatsManager.MOST_PLAYED_ID;
+        isRecentlyPlayed = playlistId == PlayStatsManager.RECENTLY_PLAYED_ID;
         if (playlistId == -1 && !isFavorites) {
             finish();
             return;
@@ -87,7 +93,20 @@ public class PlaylistDetailActivity extends BaseActivity {
             exportBtn.setVisibility(View.GONE);
         }
 
-        exportBtn.setOnClickListener(v -> {
+        if (isAutoPlaylist()) {
+            // Show play counts / last-played time on each row
+            PlayStatsManager stats = PlayStatsManager.getInstance(this);
+            adapter.setSongNoteProvider(song -> {
+                PlayStatsManager.Stat s = stats.getStat(song.getId());
+                return isMostPlayed
+                        ? (s.count == 1 ? "1 play" : s.count + " plays")
+                        : formatAgo(s.lastPlayed);
+            });
+            // The export slot becomes "clear listening history" for auto-playlists
+            exportBtn.setText("🗑");
+            exportBtn.setContentDescription("Clear listening history");
+            exportBtn.setOnClickListener(v -> confirmClearHistory());
+        } else exportBtn.setOnClickListener(v -> {
             Playlist playlist = playlistManager.getPlaylist(playlistId);
             if (playlist != null) {
                 String filename = sanitizeFilename(playlist.getName()) + ".m3u";
@@ -112,7 +131,7 @@ public class PlaylistDetailActivity extends BaseActivity {
                     .addItem(R.drawable.ic_menu_details, "Track Details", () -> {
                         new TrackDetailsDialog(this, song).show();
                     });
-            if (!isFavorites) {
+            if (!isFavorites && !isAutoPlaylist()) {
                 builder.addDestructiveItem(R.drawable.ic_menu_remove, "Remove from Playlist", () -> {
                     playlistManager.removeSongFromPlaylist(playlistId, song.getId());
                     loadPlaylistSongs();
@@ -173,7 +192,20 @@ public class PlaylistDetailActivity extends BaseActivity {
     private void loadPlaylistSongs() {
         playlistSongs.clear();
 
-        if (isFavorites) {
+        if (isAutoPlaylist()) {
+            PlayStatsManager stats = PlayStatsManager.getInstance(this);
+            titleView.setText(isMostPlayed ? "▲ Most played" : "◷ Recently played");
+            List<Long> ids = isMostPlayed
+                    ? stats.getMostPlayedIds(PlayStatsManager.AUTO_PLAYLIST_LIMIT)
+                    : stats.getRecentlyPlayedIds(PlayStatsManager.AUTO_PLAYLIST_LIMIT);
+            java.util.Map<Long, Song> byId = new java.util.HashMap<>();
+            for (Song s : allSongs) byId.put(s.getId(), s);
+            for (long id : ids) {
+                Song s = byId.get(id);
+                if (s != null) playlistSongs.add(s);
+            }
+            emptyView.setText("Nothing here yet\nSongs appear after you listen to them");
+        } else if (isFavorites) {
             // Load from FavoritesManager
             titleView.setText("★ Favorites");
             FavoritesManager favMgr = new FavoritesManager(this);
@@ -205,7 +237,14 @@ public class PlaylistDetailActivity extends BaseActivity {
         }
 
         int count = playlistSongs.size();
-        infoView.setText(count == 1 ? "1 song" : count + " songs");
+        String info = count == 1 ? "1 song" : count + " songs";
+        if (isMostPlayed && count > 0) {
+            int plays = 0;
+            PlayStatsManager stats = PlayStatsManager.getInstance(this);
+            for (Song s : playlistSongs) plays += stats.getStat(s.getId()).count;
+            info += "  ·  " + plays + (plays == 1 ? " play" : " plays");
+        }
+        infoView.setText(info);
 
         adapter.notifyDataSetChanged();
         emptyView.setVisibility(playlistSongs.isEmpty() ? View.VISIBLE : View.GONE);
@@ -238,6 +277,31 @@ public class PlaylistDetailActivity extends BaseActivity {
                 runOnUiThread(() -> Toast.makeText(this, "❌ " + e.getMessage(), Toast.LENGTH_SHORT).show());
             }
         }).start();
+    }
+
+    private void confirmClearHistory() {
+        new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle("Clear listening history")
+                .setMessage("Reset play counts and recently played for all songs?")
+                .setPositiveButton("Clear", (d, w) -> {
+                    PlayStatsManager.getInstance(this).clear();
+                    loadPlaylistSongs();
+                    Toast.makeText(this, "Listening history cleared", Toast.LENGTH_SHORT).show();
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
+    /** "just now", "5m ago", "3h ago", "2d ago", or a date for older plays. */
+    static String formatAgo(long timeMs) {
+        if (timeMs <= 0) return "";
+        long diff = System.currentTimeMillis() - timeMs;
+        if (diff < 60_000) return "just now";
+        if (diff < 3_600_000) return (diff / 60_000) + "m ago";
+        if (diff < 86_400_000) return (diff / 3_600_000) + "h ago";
+        if (diff < 7 * 86_400_000L) return (diff / 86_400_000) + "d ago";
+        return new java.text.SimpleDateFormat("d MMM yyyy", java.util.Locale.getDefault())
+                .format(new java.util.Date(timeMs));
     }
 
     private static String sanitizeFilename(String name) {
