@@ -132,33 +132,28 @@ public class TelegramDownloadManager {
             return null;
         }
 
-        File outFile = new File(targetDir, fileName);
+        // On API < 29 write directly; on API 29+ write a temp file that
+        // registerInMediaStore() then copies in via MediaStore.
+        File outFile = Build.VERSION.SDK_INT < 29
+                ? new File(targetDir, fileName)
+                : new File(targetDir, ".tmp_" + fileName);
 
-        // On API < 29, write directly
-        if (Build.VERSION.SDK_INT < 29) {
-            FileOutputStream fos = new FileOutputStream(outFile);
-            byte[] buf = new byte[8192];
+        boolean ok = false;
+        try (InputStream in = inputStream;
+             FileOutputStream fos = new FileOutputStream(outFile)) {
+            byte[] buf = new byte[64 * 1024];
             int n;
-            while ((n = inputStream.read(buf)) != -1) {
+            while ((n = in.read(buf)) != -1) {
                 fos.write(buf, 0, n);
             }
-            fos.close();
-            inputStream.close();
-            return outFile.getAbsolutePath();
+            ok = true;
+        } finally {
+            // Never leave a truncated file behind after a network error.
+            if (!ok && outFile.exists() && !outFile.delete()) {
+                Log.w(TAG, "Could not delete partial file " + outFile);
+            }
         }
-
-        // On API 29+, write to app-private then copy via MediaStore
-        File tmpFile = new File(targetDir, ".tmp_" + fileName);
-        FileOutputStream fos = new FileOutputStream(tmpFile);
-        byte[] buf = new byte[8192];
-        int n;
-        while ((n = inputStream.read(buf)) != -1) {
-            fos.write(buf, 0, n);
-        }
-        fos.close();
-        inputStream.close();
-
-        return tmpFile.getAbsolutePath();
+        return outFile.getAbsolutePath();
     }
 
     private void registerInMediaStore(String filePath, String displayName) {

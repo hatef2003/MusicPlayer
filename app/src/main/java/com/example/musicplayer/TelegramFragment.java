@@ -93,6 +93,9 @@ public class TelegramFragment extends Fragment {
         cache = new TelegramCache(requireContext());
         localSongs = MusicRepository.loadAllSongs(requireContext());
         for (TelegramModels.TelegramGroup group : cache.load()) groupsById.put(group.chatId, group);
+        // Resume from the last confirmed update so restarts continue the sync
+        // incrementally instead of starting over and losing previously-synced topics.
+        lastUpdateId = cache.loadLastUpdateId();
 
         list.setLayoutManager(new LinearLayoutManager(requireContext()));
         final int baseBottomPadding = (int) (32 * getResources().getDisplayMetrics().density);
@@ -110,6 +113,10 @@ public class TelegramFragment extends Fragment {
 
         restoreClient();
         refreshDisplay();
+
+        // Pull anything new since the last sync, merging it into the cached
+        // structure already on screen (never replacing it).
+        if (client != null && !isSyncing) onRefresh();
     }
 
     @Override
@@ -118,23 +125,71 @@ public class TelegramFragment extends Fragment {
         restoreClient();
     }
 
+    @Override
+    public void onDestroy() {
+        if (client != null) {
+            client.shutdown();
+            client = null;
+        }
+        downloadManager = null;
+        super.onDestroy();
+    }
+
     private void restoreClient() {
         SettingsManager sm = new SettingsManager(requireContext());
-        String token = sm.getTelegramBotToken();
-        String baseUrl = sm.getTelegramBaseUrl();
+        // Normalize exactly as TelegramBotClient does, so comparing against
+        // client.getBaseUrl()/getBotToken() below doesn't see a phantom change
+        // (e.g. a trailing "/") and rebuild the client on every resume.
+        String token = TelegramBotClient.normalizeToken(sm.getTelegramBotToken());
+        String baseUrl = TelegramBotClient.normalizeBaseUrl(sm.getTelegramBaseUrl());
 
         if (token.isEmpty()) {
+            if (client != null) client.shutdown();
+            isSyncing = false;
             client = null;
             downloadManager = null;
             showEmpty("No bot token configured.\n\nGo to Settings → Telegram Bot Token\nand paste your token from @BotFather.");
             return;
         }
 
-        if (client == null || !client.getBotToken().equals(token) || !client.getBaseUrl().equals(baseUrl)) {
+        String configSignature = baseUrl + "|" + token;
+
+        // Decide whether the bot configuration actually changed. On a fresh
+        // process `client` is null but groupsById already holds the structure
+        // restored from TelegramCache above — that must NOT be discarded, or
+        // every restart would drop every topic except whichever ones receive
+        // new messages afterwards ("only the last topic shows"). Only reset
+        // when the cached data carries a signature for a *different* bot; a
+        // legacy cache without a signature is adopted as-is.
+        boolean configChanged;
+        if (client == null) {
+            configChanged = cache.hasConfigSignature()
+                    && !cache.matchesConfigSignature(configSignature);
+        } else {
+            configChanged = !client.getBotToken().equals(token)
+                    || !client.getBaseUrl().equals(baseUrl);
+        }
+
+        if (client == null || configChanged) {
+            if (client != null) {
+                // Release the old bot's threads. Its in-flight getUpdates is
+                // dropped and will never call back, so clear the sync flag —
+                // otherwise the tab stays on "syncing..." and Refresh is ignored.
+                client.shutdown();
+                if (isSyncing) {
+                    isSyncing = false;
+                    showProgress(false);
+                }
+            }
             client = new TelegramBotClient(token, baseUrl);
             downloadManager = new TelegramDownloadManager(requireContext(), client);
+        }
+
+        if (configChanged) {
+            // Different bot / base URL configured → start syncing it fresh.
             groupsById.clear();
             lastUpdateId = 0;
+            cache.saveState(new ArrayList<>(), 0, configSignature);
         }
     }
 
@@ -179,10 +234,16 @@ public class TelegramFragment extends Fragment {
             android.util.Log.e("TelegramFragment", "processUpdates failed", e);
         }
 
-        cache.save(new ArrayList<>(groupsById.values()));
+        persistState();
         isSyncing = false;
         showProgress(false);
         refreshDisplay();
+    }
+
+    /** Persist current groups together with the sync offset and bot config. */
+    private void persistState() {
+        String signature = client != null ? client.getBaseUrl() + "|" + client.getBotToken() : "";
+        cache.saveState(new ArrayList<>(groupsById.values()), lastUpdateId, signature);
     }
 
     private void handleChatMemberUpdate(JSONObject chatMember) {
@@ -215,6 +276,8 @@ public class TelegramFragment extends Fragment {
             }
 
             int threadId = message.optInt("message_thread_id", 0);
+            if (threadId == 0) return; // Not in a forum topic
+
             String topicName = message.optString("forum_topic_name", "");
             if (topicName.isEmpty()) topicName = message.optString("topic_name", "");
 
@@ -222,7 +285,10 @@ public class TelegramFragment extends Fragment {
             if (message.has("forum_topic_created")) {
                 JSONObject topicInfo = message.getJSONObject("forum_topic_created");
                 String createdTopicName = topicInfo.optString("name", "Topic " + threadId);
-                getOrCreateTopic(group, threadId, createdTopicName);
+                TelegramModels.TelegramTopic topic = getOrCreateTopic(group, threadId, createdTopicName);
+                // Also apply the real name if this thread already exists (e.g.
+                // its first audio arrived before the creation event).
+                if (!createdTopicName.isEmpty()) topic.name = createdTopicName;
                 return;
             }
 
@@ -235,14 +301,12 @@ public class TelegramFragment extends Fragment {
                 return;
             }
 
-            if (threadId == 0) return; // Not in a forum topic
-
             // Check for audio file
             if (message.has("audio")) {
                 JSONObject audio = message.getJSONObject("audio");
                 TelegramModels.TelegramTrack track = parseAudioTrack(message, audio);
                 if (track != null) {
-                    TelegramModels.TelegramTopic topic = getOrCreateTopic(group, threadId, topicName.isEmpty() ? "Topic " + threadId : topicName);
+                    TelegramModels.TelegramTopic topic = topicForMessage(group, threadId, topicName);
                     addTrackIfNew(topic, track);
                 }
             }
@@ -254,7 +318,7 @@ public class TelegramFragment extends Fragment {
                 if (mimeType.startsWith("audio/") || isAudioExtension(doc.optString("file_name", ""))) {
                     TelegramModels.TelegramTrack track = parseDocumentTrack(message, doc);
                     if (track != null) {
-                        TelegramModels.TelegramTopic topic = getOrCreateTopic(group, threadId, topicName.isEmpty() ? "Topic " + threadId : topicName);
+                        TelegramModels.TelegramTopic topic = topicForMessage(group, threadId, topicName);
                         addTrackIfNew(topic, track);
                     }
                 }
@@ -264,7 +328,7 @@ public class TelegramFragment extends Fragment {
             if (message.has("voice")) {
                 JSONObject voice = message.getJSONObject("voice");
                 if (threadId != 0) {
-                    TelegramModels.TelegramTopic topic = getOrCreateTopic(group, threadId, topicName.isEmpty() ? "Topic " + threadId : topicName);
+                    TelegramModels.TelegramTopic topic = topicForMessage(group, threadId, topicName);
                     String caption = message.optString("caption", "");
                     TelegramModels.TelegramTrack track = new TelegramModels.TelegramTrack(
                             message.getLong("message_id"),
@@ -337,6 +401,49 @@ public class TelegramFragment extends Fragment {
         TelegramModels.TelegramTopic topic = new TelegramModels.TelegramTopic(threadId, name);
         group.topics.add(topic);
         return topic;
+    }
+
+    /**
+     * Gets (or creates) the topic for a message and applies a topic name whenever
+     * the update happens to carry one. Regular Bot API messages never include the
+     * topic name — it only arrives in forum_topic_created/edited service messages —
+     * so this also lets local Bot API servers / future API versions fix a topic
+     * that was first seen as a bare "Topic &lt;id&gt;" placeholder.
+     */
+    private TelegramModels.TelegramTopic topicForMessage(TelegramModels.TelegramGroup group, int threadId, String topicName) {
+        TelegramModels.TelegramTopic topic = getOrCreateTopic(group, threadId,
+                topicName.isEmpty() ? "Topic " + threadId : topicName);
+        if (!topicName.isEmpty() && !topicName.equals(topic.name)) topic.name = topicName;
+        return topic;
+    }
+
+    /**
+     * Telegram only reveals topic names through creation/rename events the bot
+     * actually receives, so topics that pre-date the bot show up as "Topic &lt;id&gt;".
+     * Long-pressing the row lets the user set the real name locally (persisted).
+     */
+    private void showRenameTopicDialog(TelegramModels.TelegramTopic topic) {
+        if (topic == null) return;
+        EditText input = new EditText(requireContext());
+        input.setSingleLine(true);
+        input.setText(topic.name);
+        input.setSelectAllOnFocus(true);
+        input.setHint("Topic name");
+        int padding = (int) (24 * getResources().getDisplayMetrics().density);
+        input.setPadding(padding, padding / 2, padding, padding / 2);
+        new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                .setTitle("Rename Topic")
+                .setMessage("Only changes the name shown in this app.")
+                .setView(input)
+                .setPositiveButton("SAVE", (dialog, which) -> {
+                    String newName = input.getText().toString().trim();
+                    if (newName.isEmpty() || newName.equals(topic.name)) return;
+                    topic.name = newName;
+                    persistState();
+                    refreshDisplay();
+                })
+                .setNegativeButton("CANCEL", null)
+                .show();
     }
 
     private TelegramModels.TelegramTopic findTopic(TelegramModels.TelegramGroup group, int threadId) {
@@ -527,6 +634,7 @@ public class TelegramFragment extends Fragment {
 
             if (item instanceof TelegramModels.TelegramGroup) {
                 TelegramModels.TelegramGroup group = (TelegramModels.TelegramGroup) item;
+                holder.itemView.setOnLongClickListener(null);
                 holder.index.setText(String.format(java.util.Locale.US, "%02d", position + 1));
                 holder.title.setText(group.title);
                 holder.subtitle.setText(group.topics.size() + " topics");
@@ -541,16 +649,26 @@ public class TelegramFragment extends Fragment {
                 TelegramModels.TelegramTopic topic = (TelegramModels.TelegramTopic) item;
                 holder.index.setText(String.format(java.util.Locale.US, "%02d", position + 1));
                 holder.title.setText(topic.name);
-                holder.subtitle.setText(topic.tracks.size() + " tracks");
+                // Placeholder names (topic existed before the bot learned its
+                // name) can be fixed by long-pressing the row — hint at it.
+                boolean unnamed = topic.name.equals("Topic " + topic.threadId);
+                holder.subtitle.setText((topic.tracks.size() + " tracks")
+                        + (unnamed ? " • long-press to name" : ""));
                 holder.action.setText("OPEN");
                 holder.action.setOnClickListener(v -> {
                     currentTopic = topic;
                     navState = NavState.TRACKS;
                     refreshDisplay();
                 });
+                // Fix a "Topic <id>" placeholder by long-pressing the row.
+                holder.itemView.setOnLongClickListener(v -> {
+                    showRenameTopicDialog(topic);
+                    return true;
+                });
 
             } else if (item instanceof TelegramModels.TelegramTrack) {
                 TelegramModels.TelegramTrack track = (TelegramModels.TelegramTrack) item;
+                holder.itemView.setOnLongClickListener(null);
                 holder.index.setText(String.format(java.util.Locale.US, "%02d", position + 1));
                 holder.title.setText(track.getDisplayName());
 
@@ -707,9 +825,7 @@ public class TelegramFragment extends Fragment {
 
                     // Check file size limit
                     int fileSizeFromApi = fileResult.optInt("file_size", 0);
-                    String baseUrl = client.getBaseUrl();
-                    boolean isLocalApi = !baseUrl.equals("https://api.telegram.org");
-                    if (!isLocalApi && fileSizeFromApi > 20 * 1024 * 1024) {
+                    if (client.isOfficialApi() && fileSizeFromApi > 20 * 1024 * 1024) {
                         holder.action.setText("LARGE");
                         holder.action.setEnabled(true);
                         holder.progress.setVisibility(View.GONE);
@@ -743,7 +859,7 @@ public class TelegramFragment extends Fragment {
                                     holder.progress.setVisibility(View.GONE);
                                     holder.progressText.setVisibility(View.GONE);
                                     localSongs = MusicRepository.loadAllSongs(requireContext());
-                                    cache.save(new ArrayList<>(groupsById.values()));
+                                    persistState();
                                                                 Toast.makeText(requireContext(),
                                             "Saved: " + track.fileName, Toast.LENGTH_SHORT).show();
                                 }

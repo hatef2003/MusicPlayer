@@ -91,9 +91,24 @@ public class SettingsManager {
     }
 
     private final SharedPreferences prefs;
+    /** Encrypted storage for the AudD key and bot token (never backed up). */
+    private final SecureStore secrets;
 
     public SettingsManager(Context context) {
         this.prefs = context.getApplicationContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        this.secrets = new SecureStore(context);
+        migrateSecret(KEY_AUDD_API_KEY);
+        migrateSecret(KEY_TELEGRAM_BOT_TOKEN);
+    }
+
+    /** Move a secret written in plaintext by an older app version into {@link SecureStore}. */
+    private void migrateSecret(String key) {
+        if (!prefs.contains(key)) return;
+        String legacy = prefs.getString(key, "");
+        if (!secrets.contains(key) && legacy != null && !legacy.isEmpty()) {
+            secrets.put(key, legacy);
+        }
+        prefs.edit().remove(key).apply();
     }
 
     public Theme getTheme() {
@@ -121,11 +136,11 @@ public class SettingsManager {
     }
 
     public String getAuddApiKey() {
-        return prefs.getString(KEY_AUDD_API_KEY, "");
+        return secrets.get(KEY_AUDD_API_KEY, "");
     }
 
     public void setAuddApiKey(String key) {
-        prefs.edit().putString(KEY_AUDD_API_KEY, key).apply();
+        secrets.put(KEY_AUDD_API_KEY, key == null ? "" : key.trim());
     }
 
     /**
@@ -155,11 +170,11 @@ public class SettingsManager {
     }
 
     public String getTelegramBotToken() {
-        return prefs.getString(KEY_TELEGRAM_BOT_TOKEN, "");
+        return secrets.get(KEY_TELEGRAM_BOT_TOKEN, "");
     }
 
     public void setTelegramBotToken(String token) {
-        prefs.edit().putString(KEY_TELEGRAM_BOT_TOKEN, token == null ? "" : token.trim()).apply();
+        secrets.put(KEY_TELEGRAM_BOT_TOKEN, token == null ? "" : token.trim());
     }
 
     public String getTelegramBaseUrl() {

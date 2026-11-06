@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 11 and below (android:fullBackupContent). -->
+<full-backup-content>
+    <!-- Encrypted API key / bot token: the Keystore key is device-bound, so a
+         restored copy could never be decrypted anyway. Keep it out of backups. -->
+    <exclude domain="sharedpref" path="secure_settings.xml" />
+</full-backup-content>

@@ -16,13 +16,17 @@ import java.util.List;
 public class TelegramCache {
     private static final String PREFS = "telegram_cache";
     private static final String KEY_GROUPS = "groups";
+    /** Last confirmed getUpdates offset, so syncs continue incrementally across restarts. */
+    private static final String KEY_LAST_UPDATE_ID = "last_update_id";
+    /** Signature (baseUrl + "|" + token) of the bot the cached data belongs to. */
+    private static final String KEY_CONFIG_SIGNATURE = "config_signature";
     private final SharedPreferences prefs;
 
     public TelegramCache(Context context) {
         prefs = context.getApplicationContext().getSharedPreferences(PREFS, Context.MODE_PRIVATE);
     }
 
-    public void save(List<TelegramModels.TelegramGroup> groups) {
+    public void saveState(List<TelegramModels.TelegramGroup> groups, long lastUpdateId, String configSignature) {
         try {
             JSONArray groupsJson = new JSONArray();
             for (TelegramModels.TelegramGroup group : groups) {
@@ -55,9 +59,54 @@ public class TelegramCache {
                 groupJson.put("topics", topicsJson);
                 groupsJson.put(groupJson);
             }
-            prefs.edit().putString(KEY_GROUPS, groupsJson.toString()).apply();
-        } catch (Exception ignored) {
+            prefs.edit()
+                    .putString(KEY_GROUPS, groupsJson.toString())
+                    .putLong(KEY_LAST_UPDATE_ID, lastUpdateId)
+                    .putString(KEY_CONFIG_SIGNATURE, hashSignature(configSignature))
+                    .apply();
+        } catch (Exception e) {
+            android.util.Log.w("TelegramCache", "saveState failed", e);
         }
+    }
+
+    public long loadLastUpdateId() {
+        return prefs.getLong(KEY_LAST_UPDATE_ID, 0);
+    }
+
+    /** True when the cached data was synced with the given bot configuration. */
+    public boolean matchesConfigSignature(String configSignature) {
+        String raw = configSignature == null ? "" : configSignature;
+        String saved = prefs.getString(KEY_CONFIG_SIGNATURE, "");
+        if (hashSignature(raw).equals(saved)) return true;
+        // Older versions stored the raw "baseUrl|token" string. Accept it once and
+        // replace it with the hash so the token no longer sits in this file.
+        if (!raw.isEmpty() && raw.equals(saved)) {
+            prefs.edit().putString(KEY_CONFIG_SIGNATURE, hashSignature(raw)).apply();
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * The signature contains the bot token, so only a SHA-256 digest of it is
+     * persisted — enough to detect a config change without storing the secret.
+     */
+    private static String hashSignature(String signature) {
+        if (signature == null || signature.isEmpty()) return "";
+        try {
+            byte[] d = java.security.MessageDigest.getInstance("SHA-256")
+                    .digest(signature.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            StringBuilder sb = new StringBuilder("sha256:");
+            for (byte b : d) sb.append(String.format(java.util.Locale.US, "%02x", b));
+            return sb.toString();
+        } catch (Exception e) {
+            return "";
+        }
+    }
+
+    /** False for caches written by older app versions (no signature stored yet). */
+    public boolean hasConfigSignature() {
+        return prefs.contains(KEY_CONFIG_SIGNATURE);
     }
 
     public List<TelegramModels.TelegramGroup> load() {
